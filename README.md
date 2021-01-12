@@ -15,6 +15,10 @@ This repository contains a realisation of collaborative text editor for second g
 2. gRPC
 3. Cmake
 
+### Материалы
+
+TBD
+
 ### Что нужно продумать
 
 1. Как реализовать связь и причем тут Cmake?
@@ -27,7 +31,20 @@ This repository contains a realisation of collaborative text editor for second g
 
 ## Алгоритм 
 
+### Технологии
+
+1. C++
+2. gRPC
+
 ### Материалы
 
 1. [Статья про treeOPT](./notes/IgnatCEW02.pdf);
 2. [Статья "Concurrency Control in Groupware Systems"](https://www.lri.fr/~mbl/ENS/CSCW/2012/papers/Ellis-SIGMOD89.pdf)
+
+### Что нужно продумать 
+
+Алгоритм в общем понятен, но нужно додумать как хранить файлы
+
+### Текущее состояние
+
+Прочитал статью [1](./notes/IgnatCEW02.pdf).
