@@ -1,0 +1,2 @@
+# Hashes of file build rules.
+7176ef45bd936a7a1b21bddfc9baa5d1 sendstrings.pb.cc
