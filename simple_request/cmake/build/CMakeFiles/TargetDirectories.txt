@@ -1,4 +1,0 @@
-/home/alex/Project/grpc/simple_request/cmake/build/CMakeFiles/rebuild_cache.dir
-/home/alex/Project/grpc/simple_request/cmake/build/CMakeFiles/edit_cache.dir
-/home/alex/Project/grpc/simple_request/cmake/build/CMakeFiles/server.dir
-/home/alex/Project/grpc/simple_request/cmake/build/CMakeFiles/client.dir
