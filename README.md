@@ -50,7 +50,7 @@ TBD
 
 1. На вашем компьютере должен быть установлен gRPC и Protobuf;
 2. Далее надо выполнить следующие команды:
-'''shell
+'''console
     mkdir -p cmake/build
     cd cmake/build
     cmake ../../service
