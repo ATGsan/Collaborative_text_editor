@@ -50,10 +50,10 @@ TBD
 
 1. На вашем компьютере должен быть установлен gRPC и Protobuf;
 2. Далее надо выполнить следующие команды:
-'''console
-    mkdir -p cmake/build
-    cd cmake/build
-    cmake ../../service
-    make(-j)
-'''
+```console
+mkdir -p cmake/build
+cd cmake/build
+cmake ../../service
+make(-j)
+```
 3. Появятся файлы client и server которые можно запустить.
