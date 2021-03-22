@@ -18,15 +18,17 @@ message(STATUS "Using gRPC ${gRPC_VERSION}")
 set(_GRPC_GRPCPP gRPC::grpc++)
 set(_GRPC_CPP_PLUGIN_EXECUTABLE $<TARGET_FILE:gRPC::grpc_cpp_plugin>)
 
+set(protobuf_file_name dataTransportation)
+
 # Proto file
-get_filename_component(hw_proto "sendstrings.proto" ABSOLUTE)
+get_filename_component(hw_proto "${protobuf_file_name}.proto" ABSOLUTE)
 get_filename_component(hw_proto_path "${hw_proto}" PATH)
 
 # Generated sources
-set(hw_proto_srcs "${CMAKE_CURRENT_BINARY_DIR}/sendstrings.pb.cc")
-set(hw_proto_hdrs "${CMAKE_CURRENT_BINARY_DIR}/sendstrings.pb.h")
-set(hw_grpc_srcs "${CMAKE_CURRENT_BINARY_DIR}/sendstrings.grpc.pb.cc")
-set(hw_grpc_hdrs "${CMAKE_CURRENT_BINARY_DIR}/sendstrings.grpc.pb.h")
+set(hw_proto_srcs "${CMAKE_CURRENT_BINARY_DIR}/${protobuf_file_name}.pb.cc")
+set(hw_proto_hdrs "${CMAKE_CURRENT_BINARY_DIR}/${protobuf_file_name}.pb.h")
+set(hw_grpc_srcs "${CMAKE_CURRENT_BINARY_DIR}/${protobuf_file_name}.grpc.pb.cc")
+set(hw_grpc_hdrs "${CMAKE_CURRENT_BINARY_DIR}/${protobuf_file_name}.grpc.pb.h")
 add_custom_command(
       OUTPUT "${hw_proto_srcs}" "${hw_proto_hdrs}" "${hw_grpc_srcs}" "${hw_grpc_hdrs}"
       COMMAND ${_PROTOBUF_PROTOC}
