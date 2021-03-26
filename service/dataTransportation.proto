@@ -4,7 +4,7 @@ package dataTransportation;
 
 service caller{
     rpc sendFile(empty) returns (file_from_server);
-    rpc sendOP(operation) returns (operation_status);
+    rpc sendOP(operation) returns (empty);
 }
 
 message operation{
@@ -19,10 +19,8 @@ message operation_status{
     bool flag = 1;
 }
 
-message empty{
-
-}
+message empty{}
 
 message file_from_server{
-    string FILE = 1;
+    repeated string file = 1;
 }

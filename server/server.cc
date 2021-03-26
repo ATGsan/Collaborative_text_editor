@@ -1,7 +1,9 @@
 #include <grpcpp/grpcpp.h>
+#include <stdio.h>
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <utility>
 #include <inttypes.h>
 #include "dataTransportation.grpc.pb.h"
 
@@ -16,7 +18,7 @@ using dataTransportation::operation_status;
 using dataTransportation::file_from_server;
 using dataTransportation::empty;
 
-enum operation_types {
+enum {
     INSERT = 0,
     DELETE = 1,
     UNDO = 2,
@@ -24,76 +26,86 @@ enum operation_types {
 };
 
 void insert(std::string file_path, char sym, uint32_t pos, uint32_t line) {
-    std::fstream file(file_path);
+    FILE* f = fopen(&file_path[0], "r+");
     uint32_t line_counter = 0;
-    std::string buf;
-    while(line_counter != line && !file.eof()) {
-        char s;
-        file >> s;
-        buf += s;
-        line_counter += (s == '\n');
-    }
-    if(file.eof()) {
-        fprintf(stderr, "wrong line\n");
-        return;
-    }
-    uint32_t cur_pos = 0;
-    while(cur_pos != pos && !file.eof()) {
-        char s;
-        file >> s;
-        if(cur_pos == pos) {
-            buf += sym;
+    std::vector<std::string> text;
+    char c;
+    std::string str;
+    while(fscanf(f, "%c", &c) != EOF) {
+        if(c == '\n') {
+            ++line_counter;
+            text.push_back(str);
+            str = "";
+            if(line_counter == line) {
+                uint32_t cur_pos = 0;
+                while(fscanf(f, "%c", &c) != EOF) {
+                    if(c == '\n') {
+                        text.push_back(str);
+                        str = "";
+                        break;
+                    }
+                    if(cur_pos == pos) {
+                        str += sym;
+                    }
+                    str += c;
+                    ++cur_pos;
+                }
+            }
+        } else {
+            str += c;
         }
-        ++cur_pos;
-        buf += s;
-    }
-    if(file.eof()) {
-        fprintf(stderr, "wrong position\n");
-        return;
     }
     // to refactor
-    file.close();
+    fclose(f);
+    std::fstream file;
     file.open(file_path, std::ofstream::trunc | std::ofstream::out);
     file.close();
     file.open(file_path, std::ofstream::out);
-    file << buf;
+    for(std::string& s : text) {
+        file << s << '\n';
+    }
     file.close();
 }
 
 void del(std::string file_path, uint32_t pos, uint32_t line) {
-    std::fstream file(file_path);
+    FILE* f = fopen(&file_path[0], "r+");
     uint32_t line_counter = 0;
-    std::string buf;
-    while(line_counter != line && !file.eof()) {
-        char s;
-        file >> s;
-        buf += s;
-        line_counter += (s == '\n');
-    }
-    if(file.eof()) {
-        fprintf(stderr, "wrong line\n");
-        return;
-    }
-    uint32_t cur_pos = 0;
-    while(cur_pos != pos && !file.eof()) {
-        char s;
-        file >> s;
-        if(cur_pos == pos) {
-            break;
+    std::vector<std::string> text;
+    char c;
+    std::string str;
+    while(fscanf(f, "%c", &c) != EOF) {
+        if(c == '\n') {
+            ++line_counter;
+            text.push_back(str);
+            str = "";
+            if(line_counter == line) {
+                uint32_t cur_pos = 0;
+                while(fscanf(f, "%c", &c) != EOF) {
+                    if(c == '\n') {
+                        text.push_back(str);
+                        str = "";
+                        break;
+                    }
+                    if(cur_pos != pos) {
+                        str += c;
+                    }
+                    ++cur_pos;
+                }
+            }
+        } else {
+            str += c;
         }
-        ++cur_pos;
-        buf += s;
     }
-    if(file.eof()) {
-        fprintf(stderr, "wrong position\n");
-        return;
-    }
+    text.push_back(str);
     // to refactor
-    file.close();
+    fclose(f);
+    std::fstream file;
     file.open(file_path, std::ofstream::trunc | std::ofstream::out);
     file.close();
     file.open(file_path, std::ofstream::out);
-    file << buf;
+    for(std::string& s : text) {
+        file << s << '\n';
+    }
     file.close();
 }
 
@@ -109,19 +121,27 @@ class ServerService final : public caller::Service {
 private:
     std::string file_name;
 public:
-    ServerService(std::string file) : file_name(file) {}
+    ServerService(std::string file) : file_name(std::move(file)) {}
     Status sendFile(ServerContext* context, const empty* request, file_from_server* ret) {
-        std::string a;
-        std::ifstream file_stream(file_name);
+        FILE* f = fopen(&file_name[0], "r+");
+        std::vector<std::string> file_lines;
         char c;
-        while (!file_stream.eof()) {
-            file_stream >> c;
-            a += c;
+        std::string str;
+        while (fscanf(f, "%c", &c) != EOF) {
+            if(c == '\n') {
+                file_lines.push_back(str);
+                str = "";
+            } else {
+                str += c;
+            }
         }
-        ret->set_file(a);
+        for(std::string& s : file_lines) {
+            ret->add_file(s);
+        }
+        fclose(f);
         return Status::OK;
     }
-    Status sendOP(ServerContext* context, const operation* OP, file_from_server* ret) {
+    Status sendOP(ServerContext* context, const operation* OP, empty* ret) {
         uint32_t op_type = OP->op();
         uint32_t pos = OP->pos();
         uint32_t line = OP->line();
@@ -144,13 +164,15 @@ public:
             case REDO:
                 redo();
                 break;
+            default:
+                break;
         }
         return Status::OK;
     }
 };
 
 void RunServer() {
-    std::string server_adress("0.0.0.0:50051");
+    std::string server_adress("0.0.0.0:50052");
     std::string file_name = "input.txt";
     ServerService service(file_name);
     ServerBuilder builder;

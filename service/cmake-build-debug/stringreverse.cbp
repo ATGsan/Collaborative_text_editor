@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="stringreverse"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="gcc"/>
+		<Option virtualFolders="CMake Files\;CMake Files\..\;CMake Files\..\..\;CMake Files\..\..\..\;CMake Files\..\..\..\..\;CMake Files\..\..\..\..\usr\;CMake Files\..\..\..\..\usr\local\;CMake Files\..\..\..\..\usr\local\lib\;CMake Files\..\..\..\..\usr\local\lib\cmake\;CMake Files\..\..\..\..\usr\local\lib\cmake\protobuf\;CMake Files\..\..\..\..\usr\local\lib\cmake\grpc\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j8 -f &quot;/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/make -j8 -f &quot;/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j8 -f &quot;/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j8 -f &quot;/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j8 -f &quot;/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="/usr/bin/make -j8 -f &quot;/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j8 -f &quot;/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j8 -f &quot;/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="server">
+				<Option output="/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug/server" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add option="-DCARES_STATICLIB"/>
+					<Add directory="/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug"/>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j8 -f &quot;/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug/Makefile&quot;  VERBOSE=1 server"/>
+					<CompileFile command="/usr/bin/make -j8 -f &quot;/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j8 -f &quot;/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j8 -f &quot;/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="server/fast">
+				<Option output="/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug/server" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add option="-DCARES_STATICLIB"/>
+					<Add directory="/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug"/>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j8 -f &quot;/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug/Makefile&quot;  VERBOSE=1 server/fast"/>
+					<CompileFile command="/usr/bin/make -j8 -f &quot;/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j8 -f &quot;/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j8 -f &quot;/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j8 -f &quot;/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="/usr/bin/make -j8 -f &quot;/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j8 -f &quot;/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j8 -f &quot;/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="client">
+				<Option output="/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug/client" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add option="-DCARES_STATICLIB"/>
+					<Add directory="/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug"/>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j8 -f &quot;/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug/Makefile&quot;  VERBOSE=1 client"/>
+					<CompileFile command="/usr/bin/make -j8 -f &quot;/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j8 -f &quot;/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j8 -f &quot;/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="client/fast">
+				<Option output="/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug/client" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add option="-DCARES_STATICLIB"/>
+					<Add directory="/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug"/>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j8 -f &quot;/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug/Makefile&quot;  VERBOSE=1 client/fast"/>
+					<CompileFile command="/usr/bin/make -j8 -f &quot;/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j8 -f &quot;/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j8 -f &quot;/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="/home/a_t_g/Collaborative_text_editor/client/client.cc">
+			<Option target="client"/>
+		</Unit>
+		<Unit filename="/home/a_t_g/Collaborative_text_editor/server/server.cc">
+			<Option target="server"/>
+		</Unit>
+		<Unit filename="/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug/dataTransportation.grpc.pb.cc">
+			<Option target="server"/>
+			<Option target="client"/>
+		</Unit>
+		<Unit filename="/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug/dataTransportation.pb.cc">
+			<Option target="server"/>
+			<Option target="client"/>
+		</Unit>
+		<Unit filename="/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug/dataTransportation.pb.cc.rule">
+			<Option target="server"/>
+			<Option target="client"/>
+		</Unit>
+		<Unit filename="/home/a_t_g/Collaborative_text_editor/service/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+		<Unit filename="/home/a_t_g/Collaborative_text_editor/service/../../../../usr/local/lib/cmake/protobuf/protobuf-config-version.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\local\lib\cmake\protobuf\"/>
+		</Unit>
+		<Unit filename="/home/a_t_g/Collaborative_text_editor/service/../../../../usr/local/lib/cmake/protobuf/protobuf-config.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\local\lib\cmake\protobuf\"/>
+		</Unit>
+		<Unit filename="/home/a_t_g/Collaborative_text_editor/service/../../../../usr/local/lib/cmake/protobuf/protobuf-module.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\local\lib\cmake\protobuf\"/>
+		</Unit>
+		<Unit filename="/home/a_t_g/Collaborative_text_editor/service/../../../../usr/local/lib/cmake/protobuf/protobuf-options.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\local\lib\cmake\protobuf\"/>
+		</Unit>
+		<Unit filename="/home/a_t_g/Collaborative_text_editor/service/../../../../usr/local/lib/cmake/protobuf/protobuf-targets-noconfig.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\local\lib\cmake\protobuf\"/>
+		</Unit>
+		<Unit filename="/home/a_t_g/Collaborative_text_editor/service/../../../../usr/local/lib/cmake/protobuf/protobuf-targets.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\local\lib\cmake\protobuf\"/>
+		</Unit>
+		<Unit filename="/home/a_t_g/Collaborative_text_editor/service/../../../../usr/local/lib/cmake/grpc/gRPCConfig.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\local\lib\cmake\grpc\"/>
+		</Unit>
+		<Unit filename="/home/a_t_g/Collaborative_text_editor/service/../../../../usr/local/lib/cmake/grpc/gRPCConfigVersion.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\local\lib\cmake\grpc\"/>
+		</Unit>
+		<Unit filename="/home/a_t_g/Collaborative_text_editor/service/../../../../usr/local/lib/cmake/grpc/gRPCTargets-noconfig.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\local\lib\cmake\grpc\"/>
+		</Unit>
+		<Unit filename="/home/a_t_g/Collaborative_text_editor/service/../../../../usr/local/lib/cmake/grpc/gRPCTargets.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\usr\local\lib\cmake\grpc\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>
