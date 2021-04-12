@@ -1,32 +1,26 @@
-#include <grpcpp/grpcpp.h>
-#include <string>
 #include <fstream>
+#include <string>
 #include <vector>
-#include "dataTransportation.grpc.pb.h"
+
+#include <grpcpp/grpcpp.h>
+#include "operationTransportation.grpc.pb.h"
 
 using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
 
-using dataTransportation::caller;
-using dataTransportation::operation;
-using dataTransportation::operation_status;
-using dataTransportation::file_from_server;
-using dataTransportation::empty;
-
-enum {
-    INSERT = 0,
-    DELETE = 1,
-    UNDO = 2,
-    REDO = 3
-};
+using operationTransportation::clientService;
+using operationTransportation::editor_request;
+using operationTransportation::empty;
+using operationTransportation::file_from_server;
+using operationTransportation::OP_type;
 
 class ClientService {
 public:
-    ClientService(std::shared_ptr<Channel> channel, std::string file_path) :
-                         stub_(caller::NewStub(channel)), file_name(file_path) {}
+    ClientService(std::shared_ptr<Channel> channel, std::string& file_path) :
+                         stub_(clientService::NewStub(channel)), file_name(file_path) {}
 
-    std::string sendRequest() {
+    void sendRequest() {
         empty e;
         file_from_server reply;
         ClientContext context;
@@ -36,50 +30,35 @@ public:
             file << reply.file(i);
             file << '\n';
         }
-        if(status.ok()) {
-            return "OK";
-        } else {
-            std::cout << status.error_code() << ": " << status.error_message();
-            return "Rpc Failed";
-        }
     }
-    std::string OPs(uint32_t op_type, uint32_t pos, uint32_t line, const std::string& sym, uint32_t user_id) {
+    void OPs(OP_type operation, uint64_t pos, uint64_t line, char sym, uint32_t user_id) {
         empty e;
-        operation OP;
-        OP.set_op(op_type);
-        OP.set_pos(pos);
-        OP.set_line(line);
-        OP.set_sym(sym);
-        OP.set_user_id(user_id);
+        editor_request request;
+        request.set_op(operation);
+        request.set_pos(pos);
+        request.set_line(line);
+        request.set_sym(sym);
+        request.set_user_id(user_id);
         ClientContext context;
-        Status status = stub_->sendOP(&context, OP, &e);
-        if(status.ok()) {
-            return "OK";
-        } else {
-            std::cout << status.error_code() << ": " << status.error_message();
-            std::cout << std::endl;
-            return "Rpc Failed";
-        }
+        Status status = stub_->sendOP(&context, request, &e);
     }
 private:
-    std::unique_ptr<caller::Stub> stub_;
+    std::unique_ptr<clientService::Stub> stub_;
     std::string file_name;
 };
 
-void RunClient() {
-    std::string file = "output.txt";
-    std::string target_address("0.0.0.0:50052");
+void RunClient(std::string& file, std::string& server_address) {
     ClientService client(
-        grpc::CreateChannel(target_address,
+        grpc::CreateChannel(server_address,
         grpc::InsecureChannelCredentials()), file);
-
-    std::string a = client.sendRequest();
-    a = client.OPs(DELETE, 2, 1, "$", 100);
-    std::cout << a << std::endl;
 }
 
-int main(int argc, char** argv) {
-    RunClient();
+int main(int argc, char* argv[]) {
+    std::string file = "output.txt", server_address = "0.0.0.0:50052";
+    if (argc >= 3) {
+        file = argv[1];
+        server_address = argv[2];
+    }
+    RunClient(file, server_address);
     return 0;
 }
-

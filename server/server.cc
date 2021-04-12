@@ -1,112 +1,35 @@
-#include <grpcpp/grpcpp.h>
-#include <stdio.h>
-#include <string>
-#include <iostream>
+#include <cinttypes>
+#include <cstdio>
 #include <fstream>
+#include <iostream>
+#include <string>
 #include <utility>
-#include <inttypes.h>
-#include "dataTransportation.grpc.pb.h"
 
+#include <grpcpp/grpcpp.h>
+#include "operationTransportation.grpc.pb.h"
+
+using grpc::ClientContext;
 using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
 using grpc::Status;
 
-using dataTransportation::caller;
-using dataTransportation::operation;
-using dataTransportation::operation_status;
-using dataTransportation::file_from_server;
-using dataTransportation::empty;
+using operationTransportation::clientService;
+using operationTransportation::editor_request;
+using operationTransportation::file_from_server;
+using operationTransportation::empty;
+using operationTransportation::OP_type;
 
-enum {
-    INSERT = 0,
-    DELETE = 1,
-    UNDO = 2,
-    REDO = 3
-};
-
-void insert(std::string file_path, char sym, uint32_t pos, uint32_t line) {
-    FILE* f = fopen(&file_path[0], "r+");
-    uint32_t line_counter = 0;
-    std::vector<std::string> text;
-    char c;
-    std::string str;
-    while(fscanf(f, "%c", &c) != EOF) {
-        if(c == '\n') {
-            ++line_counter;
-            text.push_back(str);
-            str = "";
-            if(line_counter == line) {
-                uint32_t cur_pos = 0;
-                while(fscanf(f, "%c", &c) != EOF) {
-                    if(c == '\n') {
-                        text.push_back(str);
-                        str = "";
-                        break;
-                    }
-                    if(cur_pos == pos) {
-                        str += sym;
-                    }
-                    str += c;
-                    ++cur_pos;
-                }
-            }
-        } else {
-            str += c;
-        }
-    }
-    // to refactor
-    fclose(f);
-    std::fstream file;
-    file.open(file_path, std::ofstream::trunc | std::ofstream::out);
-    file.close();
-    file.open(file_path, std::ofstream::out);
-    for(std::string& s : text) {
-        file << s << '\n';
-    }
-    file.close();
+void insert(std::vector<std::string> &content, char sym, uint64_t pos, uint64_t line) {
+    std::cout << content[line] << std::endl;
+    content[line].insert(pos, 1, sym);
+    std::cout << content[line] << std::endl;
 }
 
-void del(std::string file_path, uint32_t pos, uint32_t line) {
-    FILE* f = fopen(&file_path[0], "r+");
-    uint32_t line_counter = 0;
-    std::vector<std::string> text;
-    char c;
-    std::string str;
-    while(fscanf(f, "%c", &c) != EOF) {
-        if(c == '\n') {
-            ++line_counter;
-            text.push_back(str);
-            str = "";
-            if(line_counter == line) {
-                uint32_t cur_pos = 0;
-                while(fscanf(f, "%c", &c) != EOF) {
-                    if(c == '\n') {
-                        text.push_back(str);
-                        str = "";
-                        break;
-                    }
-                    if(cur_pos != pos) {
-                        str += c;
-                    }
-                    ++cur_pos;
-                }
-            }
-        } else {
-            str += c;
-        }
-    }
-    text.push_back(str);
-    // to refactor
-    fclose(f);
-    std::fstream file;
-    file.open(file_path, std::ofstream::trunc | std::ofstream::out);
-    file.close();
-    file.open(file_path, std::ofstream::out);
-    for(std::string& s : text) {
-        file << s << '\n';
-    }
-    file.close();
+void del(std::vector<std::string> &content, uint64_t pos, uint64_t line) {
+    std::cout << content[line] << std::endl;
+    content[line].erase(pos);
+    std::cout << content[line] << std::endl;
 }
 
 void undo() {
@@ -117,75 +40,78 @@ void redo() {
 
 }
 
-class ServerService final : public caller::Service {
+class ServerService final : public clientService::Service {
 private:
     std::string file_name;
+    std::vector<std::string> content;
 public:
-    ServerService(std::string file) : file_name(std::move(file)) {}
-    Status sendFile(ServerContext* context, const empty* request, file_from_server* ret) {
-        FILE* f = fopen(&file_name[0], "r+");
-        std::vector<std::string> file_lines;
-        char c;
-        std::string str;
-        while (fscanf(f, "%c", &c) != EOF) {
-            if(c == '\n') {
-                file_lines.push_back(str);
-                str = "";
-            } else {
-                str += c;
-            }
+    ServerService(std::string &file) : file_name(std::move(file)) {
+        std::ifstream f(file_name);
+        std::string s;
+        while (std::getline(f, s)) {
+            content.push_back(s);
         }
-        for(std::string& s : file_lines) {
+    }
+
+    ~ServerService() {
+        std::ofstream f(file_name);
+        for(std::string& s : content) {
+            f << s;
+        }
+        std::cout << "qq\n";
+    }
+
+    Status sendFile(ServerContext *context, const empty* request, file_from_server *ret) override {
+        for (std::string &s : content) {
             ret->add_file(s);
         }
-        fclose(f);
         return Status::OK;
     }
-    Status sendOP(ServerContext* context, const operation* OP, empty* ret) {
-        uint32_t op_type = OP->op();
-        uint32_t pos = OP->pos();
-        uint32_t line = OP->line();
-        std::string s = (OP->sym());
-        char sym;
-        if(s.size() >= 1) {
-            sym = s[0];
-        }
+
+    Status sendOP(ServerContext* context, const editor_request* OP, empty* ret) override {
+        OP_type op_type = OP->op();
+        std::cout << op_type << std::endl;
+        uint64_t pos = OP->pos();
+        uint64_t line = OP->line();
+        char sym = OP->sym();
         uint32_t user_id = OP->user_id();
         switch (op_type) {
-            case INSERT:
-                insert(file_name, sym, pos, line);
+            case operationTransportation::INSERT:
+                insert(content, sym, pos, line);
                 break;
-            case DELETE:
-                del(file_name, pos, line);
+            case operationTransportation::DELETE:
+                del(content, pos, line);
                 break;
-            case UNDO:
-                undo();
-                break;
-            case REDO:
-                redo();
-                break;
+            case operationTransportation::UNDO:
+                return Status(grpc::UNIMPLEMENTED, "UNIMPLEMENTED\n");
+            case operationTransportation::REDO:
+                return Status(grpc::UNIMPLEMENTED, "UNIMPLEMENTED\n");
             default:
-                break;
+                return Status::CANCELLED;
         }
         return Status::OK;
     }
 };
 
-void RunServer() {
-    std::string server_adress("0.0.0.0:50052");
-    std::string file_name = "input.txt";
-    ServerService service(file_name);
+void RunServer(std::string &file, std::string &port) {
+    ServerService service(file);
     ServerBuilder builder;
-    builder.AddListeningPort(server_adress, grpc::InsecureServerCredentials());
+    builder.AddListeningPort(port, grpc::InsecureServerCredentials());
     builder.RegisterService(&service);
     std::unique_ptr<Server> server(builder.BuildAndStart());
-    std::cout << "Server listening on port: " << server_adress << std::endl;
-    
+    std::cout << "Server listening on port: " << port << std::endl;
+
     server->Wait();
 }
 
-int main(int argc, char** argv) {
-    RunServer();
+int main(int argc, char *argv[]) {
+    std::string file = "input.txt", server_address = "0.0.0.0:50052";
+    if (argc >= 3) {
+        file = argv[1];
+        server_address = argv[2];
+    }
+    RunServer(file, server_address);
     return 0;
 }
+
 

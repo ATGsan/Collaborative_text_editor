@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.15)
 
 # Project
-project(stringreverse)
+project(CollaborativeTextEditor)
 
 # Protobuf
 set(protobuf_MODULE_COMPATIBLE TRUE)
@@ -18,7 +18,7 @@ message(STATUS "Using gRPC ${gRPC_VERSION}")
 set(_GRPC_GRPCPP gRPC::grpc++)
 set(_GRPC_CPP_PLUGIN_EXECUTABLE $<TARGET_FILE:gRPC::grpc_cpp_plugin>)
 
-set(protobuf_file_name dataTransportation)
+set(protobuf_file_name operationTransportation)
 
 # Proto file
 get_filename_component(hw_proto "${protobuf_file_name}.proto" ABSOLUTE)

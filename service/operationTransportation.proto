@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package operationTransportation;
+
+service clientService {
+    // send file from server to client
+    rpc sendFile(empty) returns (file_from_server);
+    // send operation from client to server
+    rpc sendOP(editor_request) returns (empty);
+}
+
+// used operations
+enum OP_type {
+    INSERT = 0;
+    DELETE = 1;
+    UNDO = 2;
+    REDO = 3;
+}
+
+// message with information for operation
+message editor_request {
+    OP_type op = 1;
+    uint64 pos = 2;
+    uint64 line = 3;
+    uint32 sym = 4;
+    uint64 user_id = 5;
+}
+
+// empty message for void call
+message empty {}
+
+// vector of strings which represent the file
+message file_from_server {
+    repeated string file = 1;
+}
