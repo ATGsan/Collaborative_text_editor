@@ -21,19 +21,15 @@ using operationTransportation::empty;
 using operationTransportation::OP_type;
 
 void insert(std::vector<std::string> &content, char sym, uint64_t pos, uint64_t line) {
-    std::cout << content[line] << std::endl;
     content[line].insert(pos, 1, sym);
-    std::cout << content[line] << std::endl;
 }
 
 void del(std::vector<std::string> &content, uint64_t pos, uint64_t line) {
-    std::cout << content[line] << std::endl;
     content[line].erase(pos);
-    std::cout << content[line] << std::endl;
 }
 
 void undo() {
-
+    
 }
 
 void redo() {
