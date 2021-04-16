@@ -42,6 +42,12 @@ public:
         ClientContext context;
         Status status = stub_->sendOP(&context, request, &e);
     }
+
+    void writeToFile() {
+        empty e;
+        ClientContext context;
+        Status status = stub_->writeToFile(&context, e, &e);
+    }
 private:
     std::unique_ptr<clientService::Stub> stub_;
     std::string file_name;
