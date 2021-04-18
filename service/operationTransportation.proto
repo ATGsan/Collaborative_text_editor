@@ -7,6 +7,8 @@ service clientService {
     rpc sendFile(empty) returns (file_from_server);
     // send operation from client to server
     rpc sendOP(editor_request) returns (empty);
+    // send command to write from vector to file
+    rpc writeToFile(empty) returns (empty);
 }
 
 // used operations
@@ -15,6 +17,9 @@ enum OP_type {
     DELETE = 1;
     UNDO = 2;
     REDO = 3;
+    ADD_LINE = 4;
+    DEL_LINE = 5;
+    INVALID = 6;
 }
 
 // message with information for operation

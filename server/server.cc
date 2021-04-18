@@ -3,36 +3,177 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <deque>
 #include <utility>
 
+// grpc libraries
 #include <grpcpp/grpcpp.h>
 #include "operationTransportation.grpc.pb.h"
 
+// common grpc structures
 using grpc::ClientContext;
 using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
 using grpc::Status;
 
+// structures and services
 using operationTransportation::clientService;
 using operationTransportation::editor_request;
 using operationTransportation::file_from_server;
 using operationTransportation::empty;
 using operationTransportation::OP_type;
 
-void insert(std::vector<std::string> &content, char sym, uint64_t pos, uint64_t line) {
+// vector of executed operations
+class EOpVector{
+private:
+    // deque because complexity of insert/delete from back/front is O(1)
+    std::deque<editor_request> executed_operations;
+    size_t size;
+    size_t pos;
+public:
+    EOpVector() : size(0), pos(0) {}
+
+    size_t get_size() const {
+        return size;
+    }
+
+    size_t get_pos() const {
+        return pos;
+    }
+
+    size_t set_size(size_t arg) {
+        size = arg;
+        return size;
+    }
+
+    size_t set_pos(size_t arg) {
+        pos = arg;
+        return pos;
+    }
+
+    void add(editor_request op) {
+        if(pos != size) {
+            executed_operations.erase(executed_operations.begin() + pos, executed_operations.end());
+            size = pos;
+        }
+        if(size != 64) {
+            executed_operations.push_front(op);
+            ++size;
+            ++pos;
+        } else {
+            executed_operations.push_front(op);
+            executed_operations.pop_back();
+        }
+    }
+
+    editor_request get_for_undo() {
+        if(pos == 0) {
+            editor_request a;
+            a.set_op(operationTransportation::INVALID);
+            return a;
+        }
+        auto a = *(executed_operations.begin() + pos-- - 1);
+        if(a.op() == operationTransportation::INSERT) {
+            a.set_op(operationTransportation::DELETE);
+        } else if(a.op() == operationTransportation::DELETE) {
+            a.set_op(operationTransportation::INSERT);
+        } else if(a.op() == operationTransportation::ADD_LINE) {
+            a.set_op(operationTransportation::DEL_LINE);
+        } else if(a.op() == operationTransportation::DEL_LINE) {
+            a.set_op(operationTransportation::ADD_LINE);
+        } else {
+            a.set_op(operationTransportation::INVALID);
+        }
+        return a;
+    }
+    editor_request get_for_redo() {
+        if(pos == size) {
+            editor_request a;
+            a.set_op(operationTransportation::INVALID);
+            return a;
+        }
+        auto a = *(executed_operations.begin() + pos++);
+        return a;
+    }
+};
+
+void insert(std::vector<std::string>& content, char sym, uint64_t pos, uint64_t line) {
     content[line].insert(pos, 1, sym);
 }
 
-void del(std::vector<std::string> &content, uint64_t pos, uint64_t line) {
-    content[line].erase(pos);
+void del(std::vector<std::string>& content, char sym, uint64_t pos, uint64_t line) {
+    content[line].erase(pos, 1);
 }
 
-void undo() {
-    
+void add_line(std::vector<std::string>& content, uint64_t pos, uint64_t line) {
+    std::string str = content[line].substr(pos, content[line].size() - pos);
+    content.insert(content.begin() + line + 1, "");
+    content[line + 1] = str;
+    content[line].erase(content[line].begin() + pos, content[line].end());
 }
 
-void redo() {
+void del_line(std::vector<std::string>& content, uint64_t line) {
+    std::string str = content[line];
+    content[line - 1].append(str);
+    content.erase(content.begin() + line);
+}
+
+
+void undo(EOpVector& exec_operations, std::vector<std::string>& content) {
+    auto a = exec_operations.get_for_undo();
+    OP_type op_type = a.op();
+    uint64_t pos = a.pos();
+    uint64_t line = a.line();
+    char sym = a.sym();
+    uint32_t user_id = a.user_id();
+    switch (op_type) {
+        case operationTransportation::INSERT: {
+            insert(content, sym, pos, line);
+            break;
+        }
+        case operationTransportation::DELETE: {
+            del(content, content[line][pos], pos, line);
+            break;
+        }
+        case operationTransportation::ADD_LINE: {
+            add_line(content, pos, line);
+            break;
+        }
+        case operationTransportation::DEL_LINE: {
+            del_line(content, line + 1);
+        }
+        default:
+            return;
+    }
+}
+
+void redo(EOpVector& exec_operations, std::vector<std::string>& content) {
+    auto a = exec_operations.get_for_redo();
+    OP_type op_type = a.op();
+    uint64_t pos = a.pos();
+    uint64_t line = a.line();
+    char sym = a.sym();
+    uint32_t user_id = a.user_id();
+    switch (op_type) {
+        case operationTransportation::INSERT: {
+            insert(content, sym, pos, line);
+            break;
+        }
+        case operationTransportation::DELETE: {
+            del(content, content[line][pos], pos, line);
+            break;
+        }
+        case operationTransportation::ADD_LINE: {
+            add_line(content, pos, line);
+            break;
+        }
+        case operationTransportation::DEL_LINE: {
+            del_line(content, line + 1);
+        }
+        default:
+            return;
+    }
 
 }
 
@@ -40,6 +181,7 @@ class ServerService final : public clientService::Service {
 private:
     std::string file_name;
     std::vector<std::string> content;
+    EOpVector op_vector;
 public:
     ServerService(std::string &file) : file_name(std::move(file)) {
         std::ifstream f(file_name);
@@ -52,9 +194,8 @@ public:
     ~ServerService() {
         std::ofstream f(file_name);
         for(std::string& s : content) {
-            f << s;
+            f << s << std::endl;
         }
-        std::cout << "qq\n";
     }
 
     Status sendFile(ServerContext *context, const empty* request, file_from_server *ret) override {
@@ -64,24 +205,50 @@ public:
         return Status::OK;
     }
 
+    Status writeToFile(ServerContext* context, const empty* request, empty* write) override {
+        std::ofstream f(file_name);
+        for(std::string& s : content) {
+            f << s << std::endl;
+        }
+        return Status::OK;
+    }
+
     Status sendOP(ServerContext* context, const editor_request* OP, empty* ret) override {
         OP_type op_type = OP->op();
-        std::cout << op_type << std::endl;
         uint64_t pos = OP->pos();
         uint64_t line = OP->line();
         char sym = OP->sym();
         uint32_t user_id = OP->user_id();
         switch (op_type) {
-            case operationTransportation::INSERT:
+            case operationTransportation::INSERT: {
+                op_vector.add(*OP);
                 insert(content, sym, pos, line);
                 break;
-            case operationTransportation::DELETE:
-                del(content, pos, line);
+            }
+            case operationTransportation::DELETE: {
+                auto a = *OP;
+                a.set_sym(content[line][pos]);
+                op_vector.add(a);
+                del(content, content[line][pos], pos, line);
                 break;
-            case operationTransportation::UNDO:
-                return Status(grpc::UNIMPLEMENTED, "UNIMPLEMENTED\n");
-            case operationTransportation::REDO:
-                return Status(grpc::UNIMPLEMENTED, "UNIMPLEMENTED\n");
+            }
+            case operationTransportation::UNDO: {
+                undo(op_vector, content);
+                break;
+            }
+            case operationTransportation::REDO: {
+                redo(op_vector, content);
+                break;
+            }
+            case operationTransportation::ADD_LINE: {
+                op_vector.add(*OP);
+                add_line(content, pos,line);
+                break;
+            }
+            case operationTransportation::DEL_LINE: {
+                op_vector.add(*OP);
+                del_line(content,line);
+            }
             default:
                 return Status::CANCELLED;
         }
@@ -96,7 +263,6 @@ void RunServer(std::string &file, std::string &port) {
     builder.RegisterService(&service);
     std::unique_ptr<Server> server(builder.BuildAndStart());
     std::cout << "Server listening on port: " << port << std::endl;
-
     server->Wait();
 }
 
