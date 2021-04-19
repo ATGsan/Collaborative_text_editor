@@ -1,5 +1,6 @@
 #include <cinttypes>
 #include <cstdio>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -11,7 +12,6 @@
 #include "operationTransportation.grpc.pb.h"
 
 // common grpc structures
-using grpc::ClientContext;
 using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
@@ -24,7 +24,14 @@ using operationTransportation::file_from_server;
 using operationTransportation::empty;
 using operationTransportation::OP_type;
 
-// vector of executed operations
+bool file_exist(const std::string& file_path) {
+    if(fopen(file_path.c_str(), "r+")) {
+        return true;
+    }
+    return false;
+}
+
+// vector for executed operations
 class EOpVector{
 private:
     // deque because complexity of insert/delete from back/front is O(1)
@@ -74,16 +81,22 @@ public:
             return a;
         }
         auto a = *(executed_operations.begin() + pos-- - 1);
-        if(a.op() == operationTransportation::INSERT) {
-            a.set_op(operationTransportation::DELETE);
-        } else if(a.op() == operationTransportation::DELETE) {
-            a.set_op(operationTransportation::INSERT);
-        } else if(a.op() == operationTransportation::ADD_LINE) {
-            a.set_op(operationTransportation::DEL_LINE);
-        } else if(a.op() == operationTransportation::DEL_LINE) {
-            a.set_op(operationTransportation::ADD_LINE);
-        } else {
-            a.set_op(operationTransportation::INVALID);
+        switch (a.op()) {
+            case operationTransportation::INSERT :
+                a.set_op(operationTransportation::DELETE);
+                break;
+            case operationTransportation::DELETE :
+                a.set_op(operationTransportation::INSERT);
+                break;
+            case operationTransportation::ADD_LINE :
+                a.set_op(operationTransportation::DEL_LINE);
+                break;
+            case operationTransportation::DEL_LINE :
+                a.set_op(operationTransportation::ADD_LINE);
+                break;
+            default:
+                a.set_op(operationTransportation::INVALID);
+                break;
         }
         return a;
     }
@@ -114,11 +127,9 @@ void add_line(std::vector<std::string>& content, uint64_t pos, uint64_t line) {
 }
 
 void del_line(std::vector<std::string>& content, uint64_t line) {
-    std::string str = content[line];
-    content[line - 1].append(str);
+    content[line - 1].append(content[line]);
     content.erase(content.begin() + line);
 }
-
 
 void undo(EOpVector& exec_operations, std::vector<std::string>& content) {
     auto a = exec_operations.get_for_undo();
@@ -142,6 +153,7 @@ void undo(EOpVector& exec_operations, std::vector<std::string>& content) {
         }
         case operationTransportation::DEL_LINE: {
             del_line(content, line + 1);
+            break;
         }
         default:
             return;
@@ -170,6 +182,7 @@ void redo(EOpVector& exec_operations, std::vector<std::string>& content) {
         }
         case operationTransportation::DEL_LINE: {
             del_line(content, line + 1);
+            break;
         }
         default:
             return;
@@ -271,6 +284,9 @@ int main(int argc, char *argv[]) {
     if (argc >= 3) {
         file = argv[1];
         server_address = argv[2];
+    }
+    if(!file_exist(file)) {
+        // TODO(Alex, 18.04.2020) : create file
     }
     RunServer(file, server_address);
     return 0;

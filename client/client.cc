@@ -51,6 +51,7 @@ public:
         ClientContext context;
         Status status = stub_->sendOP(&context, request, &e);
     }
+
     // call to write file from vector of strings to file in server file
     void writeToFile() {
         empty e;

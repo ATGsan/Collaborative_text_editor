@@ -31,7 +31,7 @@ message editor_request {
     uint64 user_id = 5;
 }
 
-// empty message for void call
+// empty message for void and no-argument calls
 message empty {}
 
 // vector of strings which represent the file
