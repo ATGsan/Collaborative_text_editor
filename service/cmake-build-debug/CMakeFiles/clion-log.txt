@@ -1,39 +1,6 @@
-/home/a_t_g/.local/share/JetBrains/Toolbox/apps/CLion/ch-0/203.7717.62/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" /home/a_t_g/Collaborative_text_editor/service
-CMake Error: Could not find cmake module file: CMakeDeterminetextCompiler.cmake
-CMake Error: Error required internal CMake variable not set, cmake may not be built correctly.
-Missing variable is:
-CMAKE_text_COMPILER_ENV_VAR
-CMake Error: Error required internal CMake variable not set, cmake may not be built correctly.
-Missing variable is:
-CMAKE_text_COMPILER
-CMake Error: Could not find cmake module file: /home/a_t_g/Collaborative_text_editor/service/cmake-build-debug/CMakeFiles/3.17.5/CMaketextCompiler.cmake
-CMake Error: Could not find cmake module file: CMakeDetermineeditorCompiler.cmake
-CMake Error: Error required internal CMake variable not set, cmake may not be built correctly.
-Missing variable is:
-CMAKE_editor_COMPILER_ENV_VAR
-CMake Error: Error required internal CMake variable not set, cmake may not be built correctly.
-Missing variable is:
-CMAKE_editor_COMPILER
-CMake Error: Could not find cmake module file: /home/a_t_g/Collaborative_text_editor/service/cmake-build-debug/CMakeFiles/3.17.5/CMakeeditorCompiler.cmake
-CMake Error at CMakeLists.txt:5 (project):
-  No CMAKE_text_COMPILER could be found.
-
-  Tell CMake where to find the compiler by setting the CMake cache entry
-  CMAKE_text_COMPILER to the full path to the compiler, or to the compiler
-  name if it is in the PATH.
-
-
-CMake Error: Could not find cmake module file: CMaketextInformation.cmake
-CMake Error at CMakeLists.txt:5 (project):
-  No CMAKE_editor_COMPILER could be found.
-
-  Tell CMake where to find the compiler by setting the CMake cache entry
-  CMAKE_editor_COMPILER to the full path to the compiler, or to the compiler
-  name if it is in the PATH.
-
-
-CMake Error: Could not find cmake module file: CMakeeditorInformation.cmake
-CMake Error: CMAKE_text_COMPILER not set, after EnableLanguage
-CMake Error: CMAKE_editor_COMPILER not set, after EnableLanguage
--- Configuring incomplete, errors occurred!
-See also "/home/a_t_g/Collaborative_text_editor/service/cmake-build-debug/CMakeFiles/CMakeOutput.log".
+/home/a_t_g/.local/share/JetBrains/Toolbox/apps/CLion/ch-0/211.7142.21/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" /home/a_t_g/Collaborative_text_editor/service
+-- Using protobuf 
+-- Using gRPC 1.35.0
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/a_t_g/Collaborative_text_editor/service/cmake-build-debug

@@ -4,11 +4,12 @@ package operationTransportation;
 
 service clientService {
     // send file from server to client
-    rpc sendFile(empty) returns (file_from_server);
+    rpc initialize(empty) returns (file_from_server);
     // send operation from client to server
-    rpc sendOP(editor_request) returns (empty);
+    rpc sendOP(editor_request) returns (last_executed_operation);
     // send command to write from vector to file
-    rpc writeToFile(empty) returns (empty);
+    rpc writeToFile(empty) returns (last_executed_operation);
+    // request for last operation
 }
 
 // used operations
@@ -29,6 +30,11 @@ message editor_request {
     uint64 line = 3;
     uint32 sym = 4;
     uint64 user_id = 5;
+    uint64 op_id = 6;
+}
+
+message last_executed_operation {
+    uint64 op_id = 1;
 }
 
 // empty message for void and no-argument calls
@@ -37,4 +43,5 @@ message empty {}
 // vector of strings which represent the file
 message file_from_server {
     repeated string file = 1;
+    uint64 op_id = 2;
 }

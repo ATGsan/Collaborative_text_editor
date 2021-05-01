@@ -44,7 +44,7 @@ include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 
 # Targets (client|server)
 foreach(_target
-  client server)
+  client server test)
   add_executable(${_target} "../${_target}/${_target}.cc"
     ${hw_proto_srcs}
     ${hw_grpc_srcs})
