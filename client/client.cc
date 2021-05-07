@@ -53,71 +53,111 @@
 #include <QtWidgets>
 #include <cctype>
 
-#include <grpcpp/grpcpp.h>
-#include "operationTransportation.grpc.pb.h"
+//#include <grpcpp/grpcpp.h>
+//#include "operationTransportation.grpc.pb.h"
 
-using grpc::Channel;
-using grpc::ClientContext;
-using grpc::Status;
+//using grpc::Channel;
+//using grpc::ClientContext;
+//using grpc::Status;
 
-using operationTransportation::clientService;
-using operationTransportation::editor_request;
-using operationTransportation::empty;
-using operationTransportation::file_from_server;
-using operationTransportation::OP_type;
-using operationTransportation::last_executed_operation;
+//using operationTransportation::clientService;
+//using operationTransportation::editor_request;
+//using operationTransportation::empty;
+//using operationTransportation::file_from_server;
+//using operationTransportation::OP_type;
+//using operationTransportation::last_executed_operation;
 
 #include "client.h"
 
-// main class for client
-class ClientService {
-private:
-    std::unique_ptr<clientService::Stub> stub_;
-    std::string file_name;
-    uint64_t last_op;
-public:
-    // default constructor with initialize of channel between server and client
-    ClientService(std::shared_ptr<Channel> channel, std::string& file_path) :
-            stub_(clientService::NewStub(channel)), file_name(file_path) {}
+ClientService::ClientService(std::shared_ptr<Channel> channel, std::string& file_path) :
+    stub_(clientService::NewStub(channel)), file_name(file_path) {}
 
-    // command to initialize file in client side
-    void initialize() {
-        empty e;
-        file_from_server reply;
-        ClientContext context;
-        // call rpc in server side
-        Status status = stub_->initialize(&context, e, &reply);
-        std::fstream file(file_name);
-        for(int i = 0; i < reply.file_size(); i++) {
-            file << reply.file(i) << std::endl;
-        }
-        last_op = reply.op_id();
-    }
+ClientService::ClientService() {}
 
-    // main method to send operation to server
-    void OPs(OP_type operation, uint64_t pos, uint64_t line, char sym, uint32_t user_id) {
-        last_executed_operation op;
-        editor_request request;
-        request.set_op(operation);
-        request.set_pos(pos);
-        request.set_line(line);
-        request.set_sym(sym);
-        request.set_user_id(user_id);
-        request.set_op_id(last_op);
-        ClientContext context;
-        Status status = stub_->sendOP(&context, request, &op);
-        last_op = op.op_id();
+void ClientService::initialize() {
+    empty e;
+    file_from_server reply;
+    ClientContext context;
+    // call rpc in server side
+    Status status = stub_->initialize(&context, e, &reply);
+    std::fstream file(file_name);
+    for(int i = 0; i < reply.file_size(); i++) {
+        file << reply.file(i) << std::endl;
     }
+    last_op = reply.op_id();
+}
 
-    // call to write file from vector of strings to file in server file
-    void writeToFile() {
-        empty e;
-        last_executed_operation op;
-        ClientContext context;
-        Status status = stub_->writeToFile(&context, e, &op);
-        last_op = op.op_id();
-    }
-};
+void ClientService::OPs(OP_type operation, uint64_t pos, uint64_t line, char sym, uint32_t user_id) {
+    last_executed_operation op;
+    editor_request request;
+    request.set_op(operation);
+    request.set_pos(pos);
+    request.set_line(line);
+    request.set_sym(sym);
+    request.set_user_id(user_id);
+    request.set_op_id(last_op);
+    ClientContext context;
+    Status status = stub_->sendOP(&context, request, &op);
+    last_op = op.op_id();
+}
+
+void ClientService::writeToFile() {
+    empty e;
+    last_executed_operation op;
+    ClientContext context;
+    Status status = stub_->writeToFile(&context, e, &op);
+    last_op = op.op_id();
+}
+
+//// main class for client
+//class ClientService {
+//private:
+//    std::unique_ptr<clientService::Stub> stub_;
+//    std::string file_name;
+//    uint64_t last_op;
+//public:
+//    // default constructor with initialize of channel between server and client
+//    ClientService(std::shared_ptr<Channel> channel, std::string& file_path) :
+//            stub_(clientService::NewStub(channel)), file_name(file_path) {}
+
+//    // command to initialize file in client side
+//    void initialize() {
+//        empty e;
+//        file_from_server reply;
+//        ClientContext context;
+//        // call rpc in server side
+//        Status status = stub_->initialize(&context, e, &reply);
+//        std::fstream file(file_name);
+//        for(int i = 0; i < reply.file_size(); i++) {
+//            file << reply.file(i) << std::endl;
+//        }
+//        last_op = reply.op_id();
+//    }
+
+//    // main method to send operation to server
+//    void OPs(OP_type operation, uint64_t pos, uint64_t line, char sym, uint32_t user_id) {
+//        last_executed_operation op;
+//        editor_request request;
+//        request.set_op(operation);
+//        request.set_pos(pos);
+//        request.set_line(line);
+//        request.set_sym(sym);
+//        request.set_user_id(user_id);
+//        request.set_op_id(last_op);
+//        ClientContext context;
+//        Status status = stub_->sendOP(&context, request, &op);
+//        last_op = op.op_id();
+//    }
+
+//    // call to write file from vector of strings to file in server file
+//    void writeToFile() {
+//        empty e;
+//        last_executed_operation op;
+//        ClientContext context;
+//        Status status = stub_->writeToFile(&context, e, &op);
+//        last_op = op.op_id();
+//    }
+//};
 
 void RunClient(std::string& file, std::string& server_address) {
     ClientService client(
@@ -137,16 +177,29 @@ size_t receiveCursorsQuantity() {
 
 static int POS=0, LINE=0, CLIENT_ID=receiveId(), CURSORS_QUANTITY = receiveCursorsQuantity();
 
-void client::receiveCursorsPositions() {
-    for (int i = 0; i < CURSORS_QUANTITY; ++i) {
-        cursorsPositions[i] = 0; // менять на значение, полученное с сервера
+QString client::askFilename() {
+    // спросить имя файла, дефолт output.txt
+    bool ok;
+    QString file = QInputDialog::getText(this, tr("Filename"),
+                                         tr("Filename:"), QLineEdit::Normal,
+                                         QDir::home().dirName(), &ok);
+    if (!ok || file.isEmpty()) {
+        file = "output.txt";
     }
-    // получать новые позицие курсоров (может быть в векторе, может быть числами)
+    statusBar()->showMessage(file);
+    return file;
 }
 
-client::client()
+client::client(std::string server_address, std::string file)
     : textEdit(new QPlainTextEdit), cursor(textEdit->textCursor())
-{
+{    
+    // создать объект ClientService, от которого будут отправляться на сервер операции
+    file = askFilename().toStdString();
+    setCurrentFile(QString::fromUtf8(file.c_str()));
+    this->service = ClientService(
+            grpc::CreateChannel(server_address,
+                                grpc::InsecureChannelCredentials()), file);
+
     setCentralWidget(textEdit);
 
     createActions();
@@ -173,7 +226,17 @@ client::client()
     }
 }
 
+
+
+void client::receiveCursorsPositions() {
+    for (int i = 0; i < CURSORS_QUANTITY; ++i) {
+        cursorsPositions[i] = 0; // менять на значение, полученное с сервера
+    }
+    // получать новые позицие курсоров (может быть в векторе, может быть числами)
+}
+
 void client::highlightPosition(size_t pos, QColor color) {
+    if (POS == 1) return;
     QTextCharFormat fmt;
     fmt.setBackground(color);
 
@@ -188,6 +251,7 @@ void client::highlightPosition(size_t pos, QColor color) {
 }
 
 void client::unhighlightPosition(size_t pos) {
+    if (POS == 1) return;
     QTextCharFormat fmt;
     fmt.setBackground(Qt::white);
 
@@ -201,8 +265,8 @@ void client::unhighlightPosition(size_t pos) {
     cursor.setPosition(curPos);
 }
 
-QColor intToColor(int n) {
-    return QColor(100+5*n, 100+10*n, 100+15*n);
+QColor client::intToColor(int n) {
+    return cursorColors[n % 4];
     // менять цвет в зависимости от номера или сделать вектор цветов для курсоров
 }
 
@@ -247,28 +311,21 @@ bool client::eventFilter(QObject *obj, QEvent *event) {
         if (event->type() == QEvent::KeyPress) {
             QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
             qDebug() << "user " << CLIENT_ID << " at position " << POS << " at line " << LINE;
-            // POS = textEdit->textCursor().position();
             if (keyEvent->key() == Qt::Key_Backspace) {
-                //OPs(OP_type::DELETE, POS, LINE, NULL, CLIENT_ID);
+                service.OPs(OP_type::DELETE, POS, LINE, '\0', CLIENT_ID);
                 if (POS - 1 >= 0) POS--;
                 else if (LINE -1 >= 0) POS = maintext[--LINE].size();
             }
             // if (isalpha(keyEvent->key()) || isdigit(keyEvent->key()) || isspace(keyEvent->key())) {
-            else if (keyEvent->key() > Qt::Key_Space && keyEvent->key() <= Qt::Key_Dead_Longsolidusoverlay && keyEvent->key() != Qt::Key_Backspace && keyEvent->key() != Qt::Key_Delete) {
+            else if (keyEvent->key() >= Qt::Key_Space && keyEvent->key() <= Qt::Key_Dead_Longsolidusoverlay && keyEvent->key() != Qt::Key_Backspace && keyEvent->key() != Qt::Key_Delete) {
+                service.OPs(OP_type::INSERT, POS, LINE, keyEvent->key(), CLIENT_ID);
                 POS++;
                 qDebug() << "printed " << keyEvent->text();
-                // OPs(OP_type::INSERT, POS, LINE, keyEvent->text(), CLIENT_ID)
             } else if (keyEvent->key() == Qt::Key_Enter || keyEvent->key() == Qt::Key_Return) { //?????????????????
             //} else if (keyEvent->key() == Qt::Key_Space) {
                 qDebug() << "newline";
                 LINE++;
                 POS = 0;
-                maintext = textToVector(textEdit->toPlainText());
-                for (auto s : maintext) {
-                    qDebug() << s;
-                }
-                //QString text = vecToText(maintext);
-                //qDebug() << text;
             }
 
             markCursors();
@@ -316,6 +373,14 @@ bool client::saveAs()
     return saveFile(dialog.selectedFiles().first());
 }
 
+void client::undo() {
+
+}
+
+void client::redo() {
+
+}
+
 void client::about()
 {
    QMessageBox::about(this, tr("About Application"),
@@ -330,7 +395,6 @@ void client::documentWasModified()
 
 void client::createActions()
 {
-
     QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
     QToolBar *fileToolBar = addToolBar(tr("File"));
     const QIcon newIcon = QIcon::fromTheme("document-new", QIcon(":/images/new.png"));
@@ -354,6 +418,16 @@ void client::createActions()
     saveAsAct->setShortcuts(QKeySequence::SaveAs);
     saveAsAct->setStatusTip(tr("Save the document under a new name"));
 
+    const QIcon undoIcon = QIcon::fromTheme("document-undo", QIcon(":/images/undo.png"));
+    QAction *undoAct = new QAction(undoIcon, tr("&Undo"), this);
+    undoAct->setShortcuts(QKeySequence::Undo);
+    undoAct->setStatusTip(tr("Undo"));
+
+    const QIcon redoIcon = QIcon::fromTheme("document-redo", QIcon(":/images/redo.png"));
+    QAction *redoAct = new QAction(redoIcon, tr("&Redo"), this);
+    redoAct->setShortcuts(QKeySequence::Redo);
+    redoAct->setStatusTip(tr("Redo"));
+
 
     fileMenu->addSeparator();
 
@@ -364,52 +438,23 @@ void client::createActions()
 
     QMenu *editMenu = menuBar()->addMenu(tr("&Edit"));
     QToolBar *editToolBar = addToolBar(tr("Edit"));
-#ifndef QT_NO_CLIPBOARD
-    const QIcon cutIcon = QIcon::fromTheme("edit-cut", QIcon(":/images/cut.png"));
-    QAction *cutAct = new QAction(cutIcon, tr("Cu&t"), this);
-    cutAct->setShortcuts(QKeySequence::Cut);
-    cutAct->setStatusTip(tr("Cut the current selection's contents to the "
-                            "clipboard"));
-    connect(cutAct, &QAction::triggered, textEdit, &QPlainTextEdit::cut);
-    editMenu->addAction(cutAct);
-    editToolBar->addAction(cutAct);
 
-    const QIcon copyIcon = QIcon::fromTheme("edit-copy", QIcon(":/images/copy.png"));
-    QAction *copyAct = new QAction(copyIcon, tr("&Copy"), this);
-    copyAct->setShortcuts(QKeySequence::Copy);
-    copyAct->setStatusTip(tr("Copy the current selection's contents to the "
-                             "clipboard"));
-    connect(copyAct, &QAction::triggered, textEdit, &QPlainTextEdit::copy);
-    editMenu->addAction(copyAct);
-    editToolBar->addAction(copyAct);
+    connect(undoAct, &QAction::triggered, textEdit, &QPlainTextEdit::undo);
+    editMenu->addAction(undoAct);
+    editToolBar->addAction(undoAct);
 
-    const QIcon pasteIcon = QIcon::fromTheme("edit-paste", QIcon(":/images/paste.png"));
-    QAction *pasteAct = new QAction(pasteIcon, tr("&Paste"), this);
-    pasteAct->setShortcuts(QKeySequence::Paste);
-    pasteAct->setStatusTip(tr("Paste the clipboard's contents into the current "
-                              "selection"));
-    connect(pasteAct, &QAction::triggered, textEdit, &QPlainTextEdit::paste);
-    editMenu->addAction(pasteAct);
-    editToolBar->addAction(pasteAct);
+    connect(redoAct, &QAction::triggered, textEdit, &QPlainTextEdit::redo);
+    editMenu->addAction(redoAct);
+    editToolBar->addAction(redoAct);
 
     menuBar()->addSeparator();
-
-#endif // !QT_NO_CLIPBOARD
 
     QMenu *helpMenu = menuBar()->addMenu(tr("&Help"));
     QAction *aboutAct = helpMenu->addAction(tr("&About"), this, &client::about);
     aboutAct->setStatusTip(tr("Show the application's About box"));
 
-
     QAction *aboutQtAct = helpMenu->addAction(tr("About &Qt"), qApp, &QApplication::aboutQt);
     aboutQtAct->setStatusTip(tr("Show the Qt library's About box"));
-
-#ifndef QT_NO_CLIPBOARD
-    cutAct->setEnabled(false);
-    copyAct->setEnabled(false);
-    connect(textEdit, &QPlainTextEdit::copyAvailable, cutAct, &QAction::setEnabled);
-    connect(textEdit, &QPlainTextEdit::copyAvailable, copyAct, &QAction::setEnabled);
-#endif // !QT_NO_CLIPBOARD
 }
 
 void client::createStatusBar()
@@ -490,7 +535,7 @@ void client::setCurrentFile(const QString &fileName)
 
     QString shownName = curFile;
     if (curFile.isEmpty())
-        shownName = "untitled.txt";
+        shownName = "output.txt";
     setWindowFilePath(shownName);
 }
 
