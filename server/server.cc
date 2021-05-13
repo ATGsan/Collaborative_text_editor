@@ -164,19 +164,19 @@ void insert(std::vector<std::string>& content, char sym, uint64_t pos, uint64_t 
     }
     try {
         content[line].insert(pos, 1, sym);
-        std::cout << "Inserted " << sym << " at position " << pos << " line " << line;
+        std::cout << "Inserted " << sym << " at position " << pos << " line " << line << std::endl;
     }
     catch (int e) {
-        std::cout << "Exception " << e << "thrown. Operation not executed";
+        std::cout << "Exception " << e << "thrown. Operation not executed" << std::endl;
     }
 }
 void del(std::vector<std::string>& content, char sym, uint64_t pos, uint64_t line) {
     try {
         content[line].erase(pos, 1);
-        std::cout << "Erased character at position " << pos << " line " << line;
+        std::cout << "Erased character at position " << pos << " line " << line << std::endl;
     }
     catch (int e) {
-        std::cout << "Exception " << e << "thrown. Operation not executed";
+        std::cout << "Exception " << e << "thrown. Operation not executed" << std::endl;
     }
 }
 void add_line(std::vector<std::string>& content, uint64_t pos, uint64_t line) {
@@ -187,7 +187,7 @@ void add_line(std::vector<std::string>& content, uint64_t pos, uint64_t line) {
         content[line].erase(content[line].begin() + pos, content[line].end());
     }
     catch (int e) {
-        std::cout << "Exception " << e << "thrown. Operation not executed";
+        std::cout << "Exception " << e << "thrown. Operation not executed" << std::endl;
     }
 }
 void del_line(std::vector<std::string>& content, uint64_t line) {
@@ -196,7 +196,7 @@ void del_line(std::vector<std::string>& content, uint64_t line) {
         content.erase(content.begin() + line);
     }
     catch (int e) {
-        std::cout << "Exception " << e << "thrown. Operation not executed";
+        std::cout << "Exception " << e << "thrown. Operation not executed" << std::endl;
     }
 }
 void undo(EOpVector& exec_operations, std::vector<std::string>& content) {
@@ -230,7 +230,7 @@ void undo(EOpVector& exec_operations, std::vector<std::string>& content) {
         }
     }
     catch (int e) {
-        std::cout << "undo failed";
+        std::cout << "undo failed" << std::endl;
     }
 }
 void redo(EOpVector& exec_operations, std::vector<std::string>& content) {
@@ -264,7 +264,7 @@ void redo(EOpVector& exec_operations, std::vector<std::string>& content) {
         }
     }
     catch (int e) {
-        std::cout << "redo failed";
+        std::cout << "redo failed" << std::endl;
     }
 }
 
@@ -309,7 +309,7 @@ public:
 
     Status sendOP(ServerContext* context, const editor_request* OP, last_executed_operation* ret) override {
         editor_request op = *OP;
-        op_vector.OPT(op);
+        //op_vector.OPT(op);
         OP_type op_type = op.op();
         uint64_t pos = op.pos();
         uint64_t line = op.line();

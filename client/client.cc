@@ -1,71 +1,7 @@
-/****************************************************************************
-**
-** Copyright (C) 2016 The Qt Company Ltd.
-** Contact: https://www.qt.io/licensing/
-**
-** This file is part of the examples of the Qt Toolkit.
-**
-** $QT_BEGIN_LICENSE:BSD$
-** Commercial License Usage
-** Licensees holding valid commercial Qt licenses may use this file in
-** accordance with the commercial license agreement provided with the
-** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see https://www.qt.io/terms-conditions. For further
-** information use the contact form at https://www.qt.io/contact-us.
-**
-** BSD License Usage
-** Alternatively, you may use this file under the terms of the BSD license
-** as follows:
-**
-** "Redistribution and use in source and binary forms, with or without
-** modification, are permitted provided that the following conditions are
-** met:
-**   * Redistributions of source code must retain the above copyright
-**     notice, this list of conditions and the following disclaimer.
-**   * Redistributions in binary form must reproduce the above copyright
-**     notice, this list of conditions and the following disclaimer in
-**     the documentation and/or other materials provided with the
-**     distribution.
-**   * Neither the name of The Qt Company Ltd nor the names of its
-**     contributors may be used to endorse or promote products derived
-**     from this software without specific prior written permission.
-**
-**
-** THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-** "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-** LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-** A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-** OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-** SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-** LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-** DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-** THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-** (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
-**
-** $QT_END_LICENSE$
-**
-****************************************************************************/
-
 #include <fstream>
 
 #include <QtWidgets>
 #include <cctype>
-
-//#include <grpcpp/grpcpp.h>
-//#include "operationTransportation.grpc.pb.h"
-
-//using grpc::Channel;
-//using grpc::ClientContext;
-//using grpc::Status;
-
-//using operationTransportation::clientService;
-//using operationTransportation::editor_request;
-//using operationTransportation::empty;
-//using operationTransportation::file_from_server;
-//using operationTransportation::OP_type;
-//using operationTransportation::last_executed_operation;
 
 #include "client.h"
 
@@ -74,17 +10,20 @@ ClientService::ClientService(std::shared_ptr<Channel> channel, std::string& file
 
 ClientService::ClientService() {}
 
-void ClientService::initialize() {
+std::string ClientService::initialize() {
     empty e;
     file_from_server reply;
     ClientContext context;
     // call rpc in server side
     Status status = stub_->initialize(&context, e, &reply);
+    std::string ret ="";
     std::fstream file(file_name);
     for(int i = 0; i < reply.file_size(); i++) {
         file << reply.file(i) << std::endl;
+        ret += reply.file(i);
     }
     last_op = reply.op_id();
+    return ret;
 }
 
 void ClientService::OPs(OP_type operation, uint64_t pos, uint64_t line, char sym, uint32_t user_id) {
@@ -108,56 +47,6 @@ void ClientService::writeToFile() {
     Status status = stub_->writeToFile(&context, e, &op);
     last_op = op.op_id();
 }
-
-//// main class for client
-//class ClientService {
-//private:
-//    std::unique_ptr<clientService::Stub> stub_;
-//    std::string file_name;
-//    uint64_t last_op;
-//public:
-//    // default constructor with initialize of channel between server and client
-//    ClientService(std::shared_ptr<Channel> channel, std::string& file_path) :
-//            stub_(clientService::NewStub(channel)), file_name(file_path) {}
-
-//    // command to initialize file in client side
-//    void initialize() {
-//        empty e;
-//        file_from_server reply;
-//        ClientContext context;
-//        // call rpc in server side
-//        Status status = stub_->initialize(&context, e, &reply);
-//        std::fstream file(file_name);
-//        for(int i = 0; i < reply.file_size(); i++) {
-//            file << reply.file(i) << std::endl;
-//        }
-//        last_op = reply.op_id();
-//    }
-
-//    // main method to send operation to server
-//    void OPs(OP_type operation, uint64_t pos, uint64_t line, char sym, uint32_t user_id) {
-//        last_executed_operation op;
-//        editor_request request;
-//        request.set_op(operation);
-//        request.set_pos(pos);
-//        request.set_line(line);
-//        request.set_sym(sym);
-//        request.set_user_id(user_id);
-//        request.set_op_id(last_op);
-//        ClientContext context;
-//        Status status = stub_->sendOP(&context, request, &op);
-//        last_op = op.op_id();
-//    }
-
-//    // call to write file from vector of strings to file in server file
-//    void writeToFile() {
-//        empty e;
-//        last_executed_operation op;
-//        ClientContext context;
-//        Status status = stub_->writeToFile(&context, e, &op);
-//        last_op = op.op_id();
-//    }
-//};
 
 void RunClient(std::string& file, std::string& server_address) {
     ClientService client(
@@ -309,16 +198,19 @@ QString vecToText(const QVector<QString>& vec) {
 bool client::eventFilter(QObject *obj, QEvent *event) {
     if (obj == textEdit) {
         if (event->type() == QEvent::KeyPress) {
+            QString res = this->textEdit->toPlainText();
             QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
             qDebug() << "user " << CLIENT_ID << " at position " << POS << " at line " << LINE;
             if (keyEvent->key() == Qt::Key_Backspace) {
                 service.OPs(OP_type::DELETE, POS, LINE, '\0', CLIENT_ID);
+                res = QString::fromUtf8(service.initialize().c_str());
                 if (POS - 1 >= 0) POS--;
                 else if (LINE -1 >= 0) POS = maintext[--LINE].size();
             }
             // if (isalpha(keyEvent->key()) || isdigit(keyEvent->key()) || isspace(keyEvent->key())) {
             else if (keyEvent->key() >= Qt::Key_Space && keyEvent->key() <= Qt::Key_Dead_Longsolidusoverlay && keyEvent->key() != Qt::Key_Backspace && keyEvent->key() != Qt::Key_Delete) {
                 service.OPs(OP_type::INSERT, POS, LINE, keyEvent->key(), CLIENT_ID);
+                res = QString::fromUtf8(service.initialize().c_str());
                 POS++;
                 qDebug() << "printed " << keyEvent->text();
             } else if (keyEvent->key() == Qt::Key_Enter || keyEvent->key() == Qt::Key_Return) { //?????????????????
@@ -329,6 +221,10 @@ bool client::eventFilter(QObject *obj, QEvent *event) {
             }
 
             markCursors();
+            this->textEdit->setPlainText(res);
+            std::cout << res.toStdString() << std::endl;
+            std::cout << "set cursor pos to " << POS << std::endl;
+            this->textEdit->textCursor().setPosition(POS);
 
             return QMainWindow::eventFilter(obj, event);
         }
@@ -374,11 +270,17 @@ bool client::saveAs()
 }
 
 void client::undo() {
-
+    service.OPs(OP_type::UNDO, POS, LINE, '\0', CLIENT_ID);
+    QString res = QString::fromUtf8(service.initialize().c_str());
+    this->textEdit->setPlainText(res);
+    this->textEdit->textCursor().setPosition(POS);
 }
 
 void client::redo() {
-
+    service.OPs(OP_type::REDO, POS, LINE, '\0', CLIENT_ID);
+    QString res = QString::fromUtf8(service.initialize().c_str());
+    this->textEdit->setPlainText(res);
+    this->textEdit->textCursor().setPosition(POS);
 }
 
 void client::about()
