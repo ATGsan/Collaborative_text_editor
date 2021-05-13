@@ -200,7 +200,7 @@ bool client::eventFilter(QObject *obj, QEvent *event) {
         if (event->type() == QEvent::KeyPress) {
             QString res = this->textEdit->toPlainText();
             QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
-            qDebug() << "user " << CLIENT_ID << " at position " << POS << " at line " << LINE;
+            std::cout << "user " << CLIENT_ID << " at position " << POS << " at line " << LINE << std::endl;
             if (keyEvent->key() == Qt::Key_Backspace) {
                 service.OPs(OP_type::DELETE, POS, LINE, '\0', CLIENT_ID);
                 res = QString::fromUtf8(service.initialize().c_str());
@@ -212,10 +212,10 @@ bool client::eventFilter(QObject *obj, QEvent *event) {
                 service.OPs(OP_type::INSERT, POS, LINE, keyEvent->key(), CLIENT_ID);
                 res = QString::fromUtf8(service.initialize().c_str());
                 POS++;
-                qDebug() << "printed " << keyEvent->text();
+                std::cout << "printed " << keyEvent->text().toStdString() << std::endl;
             } else if (keyEvent->key() == Qt::Key_Enter || keyEvent->key() == Qt::Key_Return) { //?????????????????
             //} else if (keyEvent->key() == Qt::Key_Space) {
-                qDebug() << "newline";
+                std::cout << "newline" << std::endl;
                 LINE++;
                 POS = 0;
             }
@@ -272,15 +272,19 @@ bool client::saveAs()
 void client::undo() {
     service.OPs(OP_type::UNDO, POS, LINE, '\0', CLIENT_ID);
     QString res = QString::fromUtf8(service.initialize().c_str());
-    this->textEdit->setPlainText(res);
-    this->textEdit->textCursor().setPosition(POS);
+    this->textEdit->clear();
+    this->textEdit->textCursor().insertText(res);
+    std::cout << "Undo operation" << std::endl;
+    statusBar()->showMessage("undoing...");
 }
 
 void client::redo() {
     service.OPs(OP_type::REDO, POS, LINE, '\0', CLIENT_ID);
     QString res = QString::fromUtf8(service.initialize().c_str());
-    this->textEdit->setPlainText(res);
-    this->textEdit->textCursor().setPosition(POS);
+    this->textEdit->clear();
+    this->textEdit->textCursor().insertText(res);
+    std::cout << "Redo operation" << std::endl;
+    statusBar()->showMessage("redoing...");
 }
 
 void client::about()
@@ -341,11 +345,11 @@ void client::createActions()
     QMenu *editMenu = menuBar()->addMenu(tr("&Edit"));
     QToolBar *editToolBar = addToolBar(tr("Edit"));
 
-    connect(undoAct, &QAction::triggered, textEdit, &QPlainTextEdit::undo);
+    connect(undoAct, &QAction::triggered, this, &client::undo);
     editMenu->addAction(undoAct);
     editToolBar->addAction(undoAct);
 
-    connect(redoAct, &QAction::triggered, textEdit, &QPlainTextEdit::redo);
+    connect(redoAct, &QAction::triggered, this, &client::redo);
     editMenu->addAction(redoAct);
     editToolBar->addAction(redoAct);
 
