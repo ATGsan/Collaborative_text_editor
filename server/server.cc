@@ -172,7 +172,7 @@ void insert(std::vector<std::string>& content, char sym, uint64_t pos, uint64_t 
 }
 void del(std::vector<std::string>& content, char sym, uint64_t pos, uint64_t line) {
     try {
-        content[line].erase(pos, 1);
+        content[line].erase(pos-1, 1);
         std::cout << "Erased character at position " << pos << " line " << line << std::endl;
     }
     catch (int e) {
@@ -201,6 +201,7 @@ void del_line(std::vector<std::string>& content, uint64_t line) {
 }
 void undo(EOpVector& exec_operations, std::vector<std::string>& content) {
     try {
+        std::cout << "undo signal received" << std::endl;
         auto a = exec_operations.get_for_undo();
         OP_type op_type = a.op();
         uint64_t pos = a.pos();
@@ -235,6 +236,7 @@ void undo(EOpVector& exec_operations, std::vector<std::string>& content) {
 }
 void redo(EOpVector& exec_operations, std::vector<std::string>& content) {
     try {
+        std::cout << "redo signal received" << std::endl;
         auto a = exec_operations.get_for_redo();
         OP_type op_type = a.op();
         uint64_t pos = a.pos();

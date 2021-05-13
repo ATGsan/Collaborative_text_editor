@@ -221,12 +221,12 @@ bool client::eventFilter(QObject *obj, QEvent *event) {
             }
 
             markCursors();
-            this->textEdit->setPlainText(res);
+            this->textEdit->clear();
+            this->textEdit->textCursor().insertText(res);
             std::cout << res.toStdString() << std::endl;
-            std::cout << "set cursor pos to " << POS << std::endl;
-            this->textEdit->textCursor().setPosition(POS);
 
-            return QMainWindow::eventFilter(obj, event);
+            return true;
+            // return QMainWindow::eventFilter(obj, event);
         }
     }
     return QMainWindow::eventFilter(obj, event);
