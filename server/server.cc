@@ -31,6 +31,11 @@ bool file_exist(const std::string& file_path) {
     }
     return false;
 }
+// debug func
+void pipu(editor_request& op) {
+    std::cout << op.op() << " " << op.pos() << " " << op.line() << " " << op.sym() << " " << op.user_id() << " " << op.op_id() << std::endl;
+}
+
 
 // vector for executed operations
 class EOpVector{
@@ -63,12 +68,12 @@ public:
             size = pos;
         }
         if(size != 64) {
-            executed_operations.push_front(op);
+            executed_operations.push_back(op);
             ++size;
             ++pos;
         } else {
-            executed_operations.push_front(op);
-            executed_operations.pop_back();
+            executed_operations.push_back(op);
+            executed_operations.pop_front();
         }
     }
 
@@ -78,7 +83,7 @@ public:
             a.set_op(operationTransportation::INVALID);
             return a;
         }
-        auto a = *(executed_operations.begin() + pos-- - 1);
+        auto a = *(executed_operations.begin() + --pos);
         switch (a.op()) {
             case operationTransportation::INSERT :
                 a.set_op(operationTransportation::DELETE);
@@ -96,6 +101,7 @@ public:
                 a.set_op(operationTransportation::INVALID);
                 break;
         }
+        pipu(a);
         return a;
     }
     editor_request get_for_redo() {
@@ -172,7 +178,7 @@ void insert(std::vector<std::string>& content, char sym, uint64_t pos, uint64_t 
 }
 void del(std::vector<std::string>& content, char sym, uint64_t pos, uint64_t line) {
     try {
-        content[line].erase(pos-1, 1);
+        content[line].erase(pos - 1, 1);
         std::cout << "Erased character at position " << pos << " line " << line << std::endl;
     }
     catch (int e) {
@@ -215,7 +221,7 @@ void undo(EOpVector& exec_operations, std::vector<std::string>& content) {
                 break;
             }
             case operationTransportation::DELETE: {
-                del(content, content[line][pos], pos, line);
+                del(content, content[line][pos], pos + 1, line);
                 break;
             }
             case operationTransportation::ADD_LINE: {
@@ -325,7 +331,9 @@ public:
                 break;
             }
             case operationTransportation::DELETE: {
-                op.set_sym(content[line][pos]);
+                op.set_sym(content[line][pos - 1]);
+                op.set_pos(op.pos() - 1);
+                std::cout << op.sym() << std::endl;
                 op_vector.add(op);
                 del(content, content[line][pos], pos, line);
                 break;
