@@ -442,7 +442,6 @@ void client::redo() {
         uint64_t last_op = a.op_id;
         switch (op_type) {
             case operationTransportation::INSERT: {
-                //insert(content, sym, pos, line);
                 service.OPs(OP_type::INSERT, POS, LINE, sym, CLIENT_ID);
                 POS++;
                 break;
@@ -454,10 +453,16 @@ void client::redo() {
             }
             case operationTransportation::ADD_LINE: {
                 service.OPs(OP_type::ADD_LINE, POS, LINE, sym, CLIENT_ID);
+                LINE++;
+                POS = 0;
                 break;
             }
             case operationTransportation::DEL_LINE: {
-                service.OPs(OP_type::DEL_LINE, POS, LINE+1, sym, CLIENT_ID);
+                if (LINE != 0) {
+                    service.OPs(OP_type::DEL_LINE, POS, LINE, sym, CLIENT_ID);
+                    LINE--;
+                    POS = service.text_vec.back().size();
+                }
                 break;
             }
             default:
