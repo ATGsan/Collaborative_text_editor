@@ -33,6 +33,6 @@ enjoy
 
 ## Credits
 
-Frontend end bug fix : Artem Prisyazhnyuk(@artempris);
-Backend and build : Alexandr Shitov(@Atgsan);
+Frontend end bug fix : Artem Prisyazhnyuk(@artempris);\
+Backend and build : Alexandr Shitov(@Atgsan);\
 Mentor and reviewer : Danila Kutenin(@Danlark).
