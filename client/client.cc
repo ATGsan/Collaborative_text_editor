@@ -278,10 +278,18 @@ bool client::eventFilter(QObject *obj, QEvent *event) {
             QString res = this->textEdit->toPlainText();
             QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
             std::cout << "user " << CLIENT_ID << " at position " << POS << " at line " << LINE << std::endl;
-            if (keyEvent->key() == Qt::Key_Backspace) {
+            if (keyEvent->key() == Qt::Key_Enter || keyEvent->key() == Qt::Key_Return) {
+                 std::cout << "newline" << std::endl;
+                 last_executed_operations.add(service.OPs(OP_type::INSERT, POS, LINE, '\n', CLIENT_ID));
+                 last_executed_operations.add(service.OPs(OP_type::ADD_LINE, POS, LINE, '\n', CLIENT_ID));
+                 LINE++;
+                 POS = 0;
+                 res = QString::fromUtf8(service.initialize().c_str());
+            } else if (keyEvent->key() == Qt::Key_Backspace) {
                 last_executed_operations.add(service.OPs(OP_type::DELETE, POS, LINE, this->textEdit->toPlainText().toStdString()[POS - 1], CLIENT_ID));
                 res = QString::fromUtf8(service.initialize().c_str());
-                if (POS - 1 >= 0) POS--;
+                POS--;
+                if (POS < 0) POS = 0;
                 else if (LINE -1 >= 0) POS = maintext[--LINE].size();
             }
             // if (isalpha(keyEvent->key()) || isdigit(keyEvent->key()) || isspace(keyEvent->key())) {
@@ -290,11 +298,6 @@ bool client::eventFilter(QObject *obj, QEvent *event) {
                 res = QString::fromUtf8(service.initialize().c_str());
                 POS++;
                 std::cout << "printed " << keyEvent->text().toStdString() << std::endl;
-            } else if (keyEvent->key() == Qt::Key_Enter || keyEvent->key() == Qt::Key_Return) {
-            //} else if (keyEvent->key() == Qt::Key_Space) {
-                std::cout << "newline" << std::endl;
-                LINE++;
-                POS = 0;
             }
 
             markCursors();
