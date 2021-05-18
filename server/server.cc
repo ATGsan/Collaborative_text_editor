@@ -168,6 +168,7 @@ public:
             content.push_back(s);
         }
         op_quantity = 0;
+        if (content.empty()) content.push_back("");
     }
     ~ServerService() {
         std::ofstream f(file_name);

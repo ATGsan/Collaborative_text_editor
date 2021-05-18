@@ -292,9 +292,8 @@ bool client::eventFilter(QObject *obj, QEvent *event) {
                     if (POS != 0) {
                         last_executed_operations.add(service.OPs(OP_type::DELETE, POS, LINE, this->textEdit->toPlainText().toStdString()[POS - 1], CLIENT_ID));
                         res = QString::fromUtf8(service.initialize().c_str());
+                        POS--;
                     }
-                    POS--;
-                    if (POS < 0) POS = 0;
                 } else {
                     if (POS == 0) {
                         last_executed_operations.add(service.OPs(OP_type::DEL_LINE, POS, LINE, '\n', CLIENT_ID));
