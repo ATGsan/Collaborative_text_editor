@@ -2,8 +2,75 @@
 
 #include <QtWidgets>
 #include <cctype>
-
 #include "client.h"
+
+EOpVector::EOpVector() : size(0), pos(0) {}
+
+size_t EOpVector::get_size() const {
+    return size;
+}
+size_t EOpVector::get_pos() const {
+    return pos;
+}
+size_t EOpVector::set_size(size_t arg) {
+    size = arg;
+    return size;
+}
+size_t EOpVector::set_pos(size_t arg) {
+    pos = arg;
+    return pos;
+}
+void EOpVector::add(request op) {
+    if(pos != size) {
+        executed_operations.erase(executed_operations.begin() + pos, executed_operations.end());
+        size = pos;
+    }
+    if(size != 64) {
+        executed_operations.push_back(op);
+        ++size;
+        ++pos;
+    } else {
+        executed_operations.push_back(op);
+        executed_operations.pop_front();
+    }
+}
+
+request EOpVector::get_for_undo() {
+    if(pos == 0) {
+        request a;
+        a.op = operationTransportation::INVALID;
+        return a;
+    }
+    auto a = *(executed_operations.begin() + --pos);
+    switch (a.op) {
+        case operationTransportation::INSERT :
+            a.op = operationTransportation::DELETE;
+            break;
+        case operationTransportation::DELETE :
+            a.op = operationTransportation::INSERT;
+            break;
+        case operationTransportation::ADD_LINE :
+            a.op = operationTransportation::DEL_LINE;
+            break;
+        case operationTransportation::DEL_LINE :
+            a.op = operationTransportation::ADD_LINE;
+            break;
+        default:
+            a.op = operationTransportation::INVALID;
+            break;
+    }
+    return a;
+}
+
+request EOpVector::get_for_redo() {
+    if(pos == size) {
+        request a;
+        a.op = operationTransportation::INVALID;
+        return a;
+    }
+    auto a = *(executed_operations.begin() + pos++);
+    return a;
+}
 
 ClientService::ClientService(std::shared_ptr<Channel> channel, std::string& file_path) :
     stub_(clientService::NewStub(channel)), file_name(file_path) {}
@@ -26,7 +93,8 @@ std::string ClientService::initialize() {
     return ret;
 }
 
-void ClientService::OPs(OP_type operation, uint64_t pos, uint64_t line, char sym, uint32_t user_id) {
+request ClientService::OPs(OP_type operation, uint64_t pos, uint64_t line, char sym, uint32_t user_id) {
+    request req;
     last_executed_operation op;
     editor_request request;
     request.set_op(operation);
@@ -35,9 +103,16 @@ void ClientService::OPs(OP_type operation, uint64_t pos, uint64_t line, char sym
     request.set_sym(sym);
     request.set_user_id(user_id);
     request.set_op_id(last_op);
+    req.op = operation;
+    req.pos = pos;
+    req.line = line;
+    req.sym = sym;
+    req.user_id = user_id;
+    req.op_id = last_op;
     ClientContext context;
     Status status = stub_->sendOP(&context, request, &op);
     last_op = op.op_id();
+    return req;
 }
 
 void ClientService::writeToFile() {
@@ -88,6 +163,8 @@ client::client(std::string server_address, std::string file)
     this->service = ClientService(
             grpc::CreateChannel(server_address,
                                 grpc::InsecureChannelCredentials()), file);
+
+    this->last_executed_operations = EOpVector();
 
     setCentralWidget(textEdit);
 
@@ -202,18 +279,18 @@ bool client::eventFilter(QObject *obj, QEvent *event) {
             QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
             std::cout << "user " << CLIENT_ID << " at position " << POS << " at line " << LINE << std::endl;
             if (keyEvent->key() == Qt::Key_Backspace) {
-                service.OPs(OP_type::DELETE, POS, LINE, '\0', CLIENT_ID);
+                last_executed_operations.add(service.OPs(OP_type::DELETE, POS, LINE, this->textEdit->toPlainText().toStdString()[POS - 1], CLIENT_ID));
                 res = QString::fromUtf8(service.initialize().c_str());
                 if (POS - 1 >= 0) POS--;
                 else if (LINE -1 >= 0) POS = maintext[--LINE].size();
             }
             // if (isalpha(keyEvent->key()) || isdigit(keyEvent->key()) || isspace(keyEvent->key())) {
             else if (keyEvent->key() >= Qt::Key_Space && keyEvent->key() <= Qt::Key_Dead_Longsolidusoverlay && keyEvent->key() != Qt::Key_Backspace && keyEvent->key() != Qt::Key_Delete) {
-                service.OPs(OP_type::INSERT, POS, LINE, keyEvent->key(), CLIENT_ID);
+                last_executed_operations.add(service.OPs(OP_type::INSERT, POS, LINE, keyEvent->key(), CLIENT_ID));
                 res = QString::fromUtf8(service.initialize().c_str());
                 POS++;
                 std::cout << "printed " << keyEvent->text().toStdString() << std::endl;
-            } else if (keyEvent->key() == Qt::Key_Enter || keyEvent->key() == Qt::Key_Return) { //?????????????????
+            } else if (keyEvent->key() == Qt::Key_Enter || keyEvent->key() == Qt::Key_Return) {
             //} else if (keyEvent->key() == Qt::Key_Space) {
                 std::cout << "newline" << std::endl;
                 LINE++;
@@ -224,6 +301,7 @@ bool client::eventFilter(QObject *obj, QEvent *event) {
             this->textEdit->clear();
             this->textEdit->textCursor().insertText(res);
             std::cout << res.toStdString() << std::endl;
+            std::cout << "cursor pos = " << this->textEdit->textCursor().position() << std::endl;
 
             return true;
             // return QMainWindow::eventFilter(obj, event);
@@ -270,21 +348,93 @@ bool client::saveAs()
 }
 
 void client::undo() {
-    service.OPs(OP_type::UNDO, POS, LINE, '\0', CLIENT_ID);
-    QString res = QString::fromUtf8(service.initialize().c_str());
-    this->textEdit->clear();
-    this->textEdit->textCursor().insertText(res);
-    std::cout << "Undo operation" << std::endl;
-    statusBar()->showMessage("undoing...");
+//    service.OPs(OP_type::UNDO, POS, LINE, '\0', CLIENT_ID);
+//    QString res = QString::fromUtf8(service.initialize().c_str());
+//    POS = service.get_pos();
+//    this->textEdit->clear();
+//    this->textEdit->textCursor().insertText(res);
+//    this->textEdit->textCursor().setPosition(POS);
+//    std::cout << "Undo operation" << std::endl;
+
+    try {
+        std::cout << "undo signal received" << std::endl;
+        auto a = last_executed_operations.get_for_undo();
+        OP_type op_type = a.op;
+        uint64_t pos = a.pos;
+        uint64_t line = a.line;
+        char sym = a.sym;
+        uint32_t user_id = a.user_id;
+        uint64_t last_op = a.op_id;
+        switch (op_type) {
+            case operationTransportation::INSERT: {
+                //insert(content, sym, pos, line);
+                service.OPs(OP_type::INSERT, POS, LINE, sym, CLIENT_ID);
+                break;
+            }
+            case operationTransportation::DELETE: {
+                service.OPs(OP_type::DELETE, POS, LINE, sym, CLIENT_ID);
+                break;
+            }
+            case operationTransportation::ADD_LINE: {
+                service.OPs(OP_type::ADD_LINE, POS, LINE, sym, CLIENT_ID);
+                break;
+            }
+            case operationTransportation::DEL_LINE: {
+                service.OPs(OP_type::DEL_LINE, POS, LINE+1, sym, CLIENT_ID);
+                break;
+            }
+            default:
+                return;
+        }
+    }
+    catch (int e) {
+        std::cout << "undo failed" << std::endl;
+    }
 }
 
 void client::redo() {
-    service.OPs(OP_type::REDO, POS, LINE, '\0', CLIENT_ID);
-    QString res = QString::fromUtf8(service.initialize().c_str());
-    this->textEdit->clear();
-    this->textEdit->textCursor().insertText(res);
-    std::cout << "Redo operation" << std::endl;
-    statusBar()->showMessage("redoing...");
+//    service.OPs(OP_type::REDO, POS, LINE, '\0', CLIENT_ID);
+//    QString res = QString::fromUtf8(service.initialize().c_str());
+//    POS = service.get_pos();
+//    this->textEdit->clear();
+//    this->textEdit->textCursor().insertText(res);
+//    this->textEdit->textCursor().setPosition(POS);
+//    std::cout << "Redo operation" << std::endl;
+
+    try {
+        std::cout << "redo signal received" << std::endl;
+        auto a = last_executed_operations.get_for_redo();
+        OP_type op_type = a.op;
+        uint64_t pos = a.pos;
+        uint64_t line = a.line;
+        char sym = a.sym;
+        uint32_t user_id = a.user_id;
+        uint64_t last_op = a.op_id;
+        switch (op_type) {
+            case operationTransportation::INSERT: {
+                //insert(content, sym, pos, line);
+                service.OPs(OP_type::INSERT, POS, LINE, sym, CLIENT_ID);
+                break;
+            }
+            case operationTransportation::DELETE: {
+                service.OPs(OP_type::DELETE, POS, LINE, sym, CLIENT_ID);
+                break;
+            }
+            case operationTransportation::ADD_LINE: {
+                service.OPs(OP_type::ADD_LINE, POS, LINE, sym, CLIENT_ID);
+                break;
+            }
+            case operationTransportation::DEL_LINE: {
+                service.OPs(OP_type::DEL_LINE, POS, LINE+1, sym, CLIENT_ID);
+                break;
+            }
+            default:
+                return;
+        }
+    }
+    catch (int e) {
+        std::cout << "redo failed" << std::endl;
+    }
 }
 
 void client::about()

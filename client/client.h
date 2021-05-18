@@ -9,6 +9,7 @@
 
 #include <grpcpp/grpcpp.h>
 #include "operationTransportation.grpc.pb.h"
+#include <deque>
 
 using grpc::Channel;
 using grpc::ClientContext;
@@ -20,6 +21,34 @@ using operationTransportation::empty;
 using operationTransportation::file_from_server;
 using operationTransportation::OP_type;
 using operationTransportation::last_executed_operation;
+
+struct request {
+    OP_type op;
+    uint64_t pos, line;
+    char sym;
+    uint64_t user_id, op_id;
+};
+
+// vector for executed operations
+class EOpVector{
+private:
+    // deque because complexity of insert/delete from back/front is O(1)
+    std::deque<request> executed_operations;
+    size_t size;
+    size_t pos;
+public:
+    EOpVector();
+
+    size_t get_size() const;
+    size_t get_pos() const;
+    size_t set_size(size_t arg);
+    size_t set_pos(size_t arg);
+
+    void add(request op);
+
+    request get_for_undo();
+    request get_for_redo();
+};
 
 class ClientService {
 private:
@@ -35,7 +64,7 @@ public:
     std::string initialize();
 
     // main method to send operation to server
-    void OPs(OP_type operation, uint64_t pos, uint64_t line, char sym, uint32_t user_id);
+    request OPs(OP_type operation, uint64_t pos, uint64_t line, char sym, uint32_t user_id);
 
     // call to write file from vector of strings to file in server file
     void writeToFile();
@@ -66,6 +95,7 @@ private slots:
 
 private:
     ClientService service;
+    EOpVector last_executed_operations;
     void createActions();
     void createStatusBar();
     void readSettings();

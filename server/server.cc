@@ -25,18 +25,6 @@ using operationTransportation::empty;
 using operationTransportation::OP_type;
 using operationTransportation::last_executed_operation;
 
-bool file_exist(const std::string& file_path) {
-    if(fopen(file_path.c_str(), "r+")) {
-        return true;
-    }
-    return false;
-}
-// debug func
-void pipu(editor_request& op) {
-    std::cout << op.op() << " " << op.pos() << " " << op.line() << " " << op.sym() << " " << op.user_id() << " " << op.op_id() << std::endl;
-}
-
-
 // vector for executed operations
 class EOpVector{
 private:
@@ -75,43 +63,6 @@ public:
             executed_operations.push_back(op);
             executed_operations.pop_front();
         }
-    }
-
-    editor_request get_for_undo() {
-        if(pos == 0) {
-            editor_request a;
-            a.set_op(operationTransportation::INVALID);
-            return a;
-        }
-        auto a = *(executed_operations.begin() + --pos);
-        switch (a.op()) {
-            case operationTransportation::INSERT :
-                a.set_op(operationTransportation::DELETE);
-                break;
-            case operationTransportation::DELETE :
-                a.set_op(operationTransportation::INSERT);
-                break;
-            case operationTransportation::ADD_LINE :
-                a.set_op(operationTransportation::DEL_LINE);
-                break;
-            case operationTransportation::DEL_LINE :
-                a.set_op(operationTransportation::ADD_LINE);
-                break;
-            default:
-                a.set_op(operationTransportation::INVALID);
-                break;
-        }
-        pipu(a);
-        return a;
-    }
-    editor_request get_for_redo() {
-        if(pos == size) {
-            editor_request a;
-            a.set_op(operationTransportation::INVALID);
-            return a;
-        }
-        auto a = *(executed_operations.begin() + pos++);
-        return a;
     }
 
     void OPT(editor_request& request) {
@@ -205,76 +156,6 @@ void del_line(std::vector<std::string>& content, uint64_t line) {
         std::cout << "Exception " << e << "thrown. Operation not executed" << std::endl;
     }
 }
-void undo(EOpVector& exec_operations, std::vector<std::string>& content) {
-    try {
-        std::cout << "undo signal received" << std::endl;
-        auto a = exec_operations.get_for_undo();
-        OP_type op_type = a.op();
-        uint64_t pos = a.pos();
-        uint64_t line = a.line();
-        char sym = a.sym();
-        uint32_t user_id = a.user_id();
-        uint64_t last_op = a.op_id();
-        switch (op_type) {
-            case operationTransportation::INSERT: {
-                insert(content, sym, pos, line);
-                break;
-            }
-            case operationTransportation::DELETE: {
-                del(content, content[line][pos], pos + 1, line);
-                break;
-            }
-            case operationTransportation::ADD_LINE: {
-                add_line(content, pos, line);
-                break;
-            }
-            case operationTransportation::DEL_LINE: {
-                del_line(content, line + 1);
-                break;
-            }
-            default:
-                return;
-        }
-    }
-    catch (int e) {
-        std::cout << "undo failed" << std::endl;
-    }
-}
-void redo(EOpVector& exec_operations, std::vector<std::string>& content) {
-    try {
-        std::cout << "redo signal received" << std::endl;
-        auto a = exec_operations.get_for_redo();
-        OP_type op_type = a.op();
-        uint64_t pos = a.pos();
-        uint64_t line = a.line();
-        char sym = a.sym();
-        uint32_t user_id = a.user_id();
-        uint64_t last_op = a.op_id();
-        switch (op_type) {
-            case operationTransportation::INSERT: {
-                insert(content, sym, pos, line);
-                break;
-            }
-            case operationTransportation::DELETE: {
-                del(content, content[line][pos], pos, line);
-                break;
-            }
-            case operationTransportation::ADD_LINE: {
-                add_line(content, pos, line);
-                break;
-            }
-            case operationTransportation::DEL_LINE: {
-                del_line(content, line + 1);
-                break;
-            }
-            default:
-                return;
-        }
-    }
-    catch (int e) {
-        std::cout << "redo failed" << std::endl;
-    }
-}
 
 class ServerService final : public clientService::Service {
 private:
@@ -338,14 +219,6 @@ public:
                 del(content, content[line][pos], pos, line);
                 break;
             }
-            case operationTransportation::UNDO: {
-                undo(op_vector, content);
-                break;
-            }
-            case operationTransportation::REDO: {
-                redo(op_vector, content);
-                break;
-            }
             case operationTransportation::ADD_LINE: {
                 op_vector.add(op);
                 add_line(content, pos,line);
@@ -380,10 +253,6 @@ int main(int argc, char *argv[]) {
     if (argc >= 3) {
         file = argv[1];
         server_address = argv[2];
-    }
-    if(!file_exist(file)) {
-        // TODO(Alex, 18.04.2020) : create file
-        std::ofstream filename(file);
     }
     RunServer(file, server_address);
     return 0;
