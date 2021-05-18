@@ -67,9 +67,6 @@ public:
 
     void OPT(editor_request& request) {
         OP_type op_type = request.op();
-        if(op_type == operationTransportation::UNDO || op_type == operationTransportation::REDO) {
-            return;
-        }
         uint64_t l = request.line();
         uint64_t p = request.pos();
         if(pos == 0) {

@@ -367,12 +367,13 @@ void client::undo() {
         uint64_t last_op = a.op_id;
         switch (op_type) {
             case operationTransportation::INSERT: {
-                //insert(content, sym, pos, line);
                 service.OPs(OP_type::INSERT, POS, LINE, sym, CLIENT_ID);
+                POS++;
                 break;
             }
             case operationTransportation::DELETE: {
                 service.OPs(OP_type::DELETE, POS, LINE, sym, CLIENT_ID);
+                POS--;
                 break;
             }
             case operationTransportation::ADD_LINE: {
@@ -386,6 +387,13 @@ void client::undo() {
             default:
                 return;
         }
+        QString res = QString::fromUtf8(service.initialize().c_str());
+        this->textEdit->textCursor().setPosition(POS);
+        markCursors();
+        this->textEdit->clear();
+        this->textEdit->textCursor().insertText(res);
+        std::cout << res.toStdString() << std::endl;
+        std::cout << "cursor pos = " << this->textEdit->textCursor().position() << std::endl;
     }
     catch (int e) {
         std::cout << "undo failed" << std::endl;
@@ -414,10 +422,12 @@ void client::redo() {
             case operationTransportation::INSERT: {
                 //insert(content, sym, pos, line);
                 service.OPs(OP_type::INSERT, POS, LINE, sym, CLIENT_ID);
+                POS++;
                 break;
             }
             case operationTransportation::DELETE: {
                 service.OPs(OP_type::DELETE, POS, LINE, sym, CLIENT_ID);
+                POS--;
                 break;
             }
             case operationTransportation::ADD_LINE: {
@@ -431,6 +441,13 @@ void client::redo() {
             default:
                 return;
         }
+        QString res = QString::fromUtf8(service.initialize().c_str());
+        this->textEdit->textCursor().setPosition(POS);
+        markCursors();
+        this->textEdit->clear();
+        this->textEdit->textCursor().insertText(res);
+        std::cout << res.toStdString() << std::endl;
+        std::cout << "cursor pos = " << this->textEdit->textCursor().position() << std::endl;
     }
     catch (int e) {
         std::cout << "redo failed" << std::endl;
