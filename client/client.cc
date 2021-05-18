@@ -83,12 +83,13 @@ std::string ClientService::initialize() {
     ClientContext context;
     // call rpc in server side
     Status status = stub_->initialize(&context, e, &reply);
-    std::string ret ="";
+    std::string ret = "";
     std::fstream file(file_name);
-    for(int i = 0; i < reply.file_size(); i++) {
+    for(int i = 0; i < reply.file_size() - 1 ; i++) {
         file << reply.file(i) << std::endl;
-        ret += reply.file(i);
+        ret += reply.file(i) + "\n";
     }
+    ret += reply.file(reply.file_size() - 1);
     last_op = reply.op_id();
     return ret;
 }
@@ -280,7 +281,6 @@ bool client::eventFilter(QObject *obj, QEvent *event) {
             std::cout << "user " << CLIENT_ID << " at position " << POS << " at line " << LINE << std::endl;
             if (keyEvent->key() == Qt::Key_Enter || keyEvent->key() == Qt::Key_Return) {
                  std::cout << "newline" << std::endl;
-                 last_executed_operations.add(service.OPs(OP_type::INSERT, POS, LINE, '\n', CLIENT_ID));
                  last_executed_operations.add(service.OPs(OP_type::ADD_LINE, POS, LINE, '\n', CLIENT_ID));
                  LINE++;
                  POS = 0;
