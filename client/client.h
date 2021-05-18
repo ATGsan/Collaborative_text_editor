@@ -10,6 +10,8 @@
 #include <grpcpp/grpcpp.h>
 #include "operationTransportation.grpc.pb.h"
 #include <deque>
+#include <vector>
+#include <string>
 
 using grpc::Channel;
 using grpc::ClientContext;
@@ -59,6 +61,8 @@ public:
     // default constructor with initialize of channel between server and client
     ClientService();
     ClientService(std::shared_ptr<Channel> channel, std::string& file_path);
+
+    std::vector<std::string> text_vec;
 
     // command to initialize file in client side
     std::string initialize();

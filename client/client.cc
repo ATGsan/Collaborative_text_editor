@@ -85,9 +85,11 @@ std::string ClientService::initialize() {
     Status status = stub_->initialize(&context, e, &reply);
     std::string ret = "";
     std::fstream file(file_name);
+    text_vec.clear();
     for(int i = 0; i < reply.file_size() - 1 ; i++) {
         file << reply.file(i) << std::endl;
         ret += reply.file(i) + "\n";
+        text_vec.push_back(reply.file(i));
     }
     ret += reply.file(reply.file_size() - 1);
     last_op = reply.op_id();
@@ -286,14 +288,25 @@ bool client::eventFilter(QObject *obj, QEvent *event) {
                  POS = 0;
                  res = QString::fromUtf8(service.initialize().c_str());
             } else if (keyEvent->key() == Qt::Key_Backspace) {
-                last_executed_operations.add(service.OPs(OP_type::DELETE, POS, LINE, this->textEdit->toPlainText().toStdString()[POS - 1], CLIENT_ID));
+                if (LINE == 0) {
+                    if (POS != 0) {
+                        last_executed_operations.add(service.OPs(OP_type::DELETE, POS, LINE, this->textEdit->toPlainText().toStdString()[POS - 1], CLIENT_ID));
+                        res = QString::fromUtf8(service.initialize().c_str());
+                    }
+                    POS--;
+                    if (POS < 0) POS = 0;
+                } else {
+                    if (POS == 0) {
+                        last_executed_operations.add(service.OPs(OP_type::DEL_LINE, POS, LINE, '\n', CLIENT_ID));
+                        LINE--;
+                        POS = service.text_vec.back().size();
+                    } else {
+                        last_executed_operations.add(service.OPs(OP_type::DELETE, POS, LINE, this->textEdit->toPlainText().toStdString()[POS - 1], CLIENT_ID));
+                        POS--;
+                    }
+                }
                 res = QString::fromUtf8(service.initialize().c_str());
-                POS--;
-                if (POS < 0) POS = 0;
-                else if (LINE -1 >= 0) POS = maintext[--LINE].size();
-            }
-            // if (isalpha(keyEvent->key()) || isdigit(keyEvent->key()) || isspace(keyEvent->key())) {
-            else if (keyEvent->key() >= Qt::Key_Space && keyEvent->key() <= Qt::Key_Dead_Longsolidusoverlay && keyEvent->key() != Qt::Key_Backspace && keyEvent->key() != Qt::Key_Delete) {
+            } else if (keyEvent->key() >= Qt::Key_Space && keyEvent->key() <= Qt::Key_Dead_Longsolidusoverlay && keyEvent->key() != Qt::Key_Backspace && keyEvent->key() != Qt::Key_Delete) {
                 last_executed_operations.add(service.OPs(OP_type::INSERT, POS, LINE, keyEvent->key(), CLIENT_ID));
                 res = QString::fromUtf8(service.initialize().c_str());
                 POS++;
@@ -381,10 +394,16 @@ void client::undo() {
             }
             case operationTransportation::ADD_LINE: {
                 service.OPs(OP_type::ADD_LINE, POS, LINE, sym, CLIENT_ID);
+                LINE++;
+                POS = 0;
                 break;
             }
             case operationTransportation::DEL_LINE: {
-                service.OPs(OP_type::DEL_LINE, POS, LINE+1, sym, CLIENT_ID);
+                if (LINE != 0) {
+                    service.OPs(OP_type::DEL_LINE, POS, LINE, sym, CLIENT_ID);
+                    LINE--;
+                    POS = service.text_vec.back().size();
+                }
                 break;
             }
             default:
