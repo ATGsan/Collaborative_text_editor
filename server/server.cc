@@ -24,6 +24,8 @@ using operationTransportation::file_from_server;
 using operationTransportation::empty;
 using operationTransportation::OP_type;
 using operationTransportation::last_executed_operation;
+using operationTransportation::pos_message;
+using operationTransportation::user_message;
 
 // vector for executed operations
 class EOpVector{
@@ -74,7 +76,7 @@ public:
         }
         size_t i = pos - 1;
         editor_request tmp = executed_operations[i];
-        while(request.op_id() != tmp.op_id() && i != 0) {
+        while(request.op_id() <= tmp.op_id() && i != 0) {
             switch (tmp.op()) {
                 case operationTransportation::INSERT: {
                     if(tmp.line() == l && tmp.pos() < p) {
@@ -154,16 +156,22 @@ void del_line(std::vector<std::string>& content, uint64_t line) {
     }
 }
 
+struct pos_line{
+    uint64_t pos;
+    uint64_t line;
+};
+
 class ServerService final : public clientService::Service {
 private:
     std::string file_name;
     std::vector<std::string> content;
     EOpVector op_vector;
     uint64_t op_quantity;
+    std::vector<int> users;
+    std::map<int, pos_line> pos_line_users;
 public:
     ServerService(std::string &file) : file_name(std::move(file)) {
         std::ifstream f(file_name);
-        content = {};
         std::string s;
         while (std::getline(f, s)) {
             content.push_back(s);
@@ -186,6 +194,19 @@ public:
         return Status::OK;
     }
 
+    Status get_u_id(ServerContext* context, const empty* request, user_message* ret) override {
+        ret->set_user_id(users.size());
+        users.push_back(1);
+        return Status::OK;
+    }
+
+    Status get_pos(ServerContext* context, const user_message* request, pos_message* ret) override {
+        ret->set_pos(pos_line_users[request->user_id()].pos);
+        ret->set_line(pos_line_users[request->user_id()].line);
+
+        return Status::OK;
+    }
+
     Status writeToFile(ServerContext* context, const empty* request, last_executed_operation* write) override {
         std::ofstream f(file_name);
         for(std::string& s : content) {
@@ -197,20 +218,45 @@ public:
 
     Status sendOP(ServerContext* context, const editor_request* OP, last_executed_operation* ret) override {
         editor_request op = *OP;
-        //op_vector.OPT(op);
+        op_vector.OPT(op);
         OP_type op_type = op.op();
         uint64_t pos = op.pos();
         uint64_t line = op.line();
+        uint64_t tot_pos = op.tot_pos();
         char sym = op.sym();
         uint32_t user_id = op.user_id();
         uint64_t last_user_op_id = op.op_id();
+        pos_line_users[user_id] = {pos, line};
         switch (op_type) {
             case operationTransportation::INSERT: {
+                for(auto& it : pos_line_users) {
+                    if(it.first == user_id) {
+                        continue;
+                    }
+                    if(it.second.line == line) {
+                        if(it.second.pos >= pos) {
+                            ++it.second.pos;
+                        }
+                    }
+                }
                 op_vector.add(op);
                 insert(content, sym, pos, line);
                 break;
             }
             case operationTransportation::DELETE: {
+                for(auto& it : pos_line_users) {
+                    if(it.first == user_id) {
+                        continue;
+                    }
+                    if(it.second.line == 0 && it.second.pos == 0) {
+                        continue;
+                    }
+                    if(it.second.line == line) {
+                        if(it.second.pos >= pos) {
+                            --it.second.pos;
+                        }
+                    }
+                }
                 op.set_sym(content[line][pos - 1]);
                 op.set_pos(op.pos() - 1);
                 std::cout << op.sym() << std::endl;
@@ -224,6 +270,17 @@ public:
                 break;
             }
             case operationTransportation::DEL_LINE: {
+                for(auto& it : pos_line_users) {
+                    if(it.first == user_id) {
+                        continue;
+                    }
+                    if(it.second.line == 0) {
+                        continue;
+                    }
+                    if(it.second.line >= line) {
+                        --pos;
+                    }
+                }
                 op_vector.add(op);
                 del_line(content,line);
                 break;
@@ -256,5 +313,3 @@ int main(int argc, char *argv[]) {
     RunServer(file, server_address);
     return 0;
 }
-
-

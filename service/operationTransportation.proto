@@ -9,7 +9,10 @@ service clientService {
     rpc sendOP(editor_request) returns (last_executed_operation);
     // send command to write from vector to file
     rpc writeToFile(empty) returns (last_executed_operation);
-    // request for last operation
+
+    rpc get_u_id(empty) returns (user_message);
+
+    rpc get_pos(user_message) returns (pos_message);
 }
 
 // used operations
@@ -28,9 +31,10 @@ message editor_request {
     OP_type op = 1;
     uint64 pos = 2;
     uint64 line = 3;
-    uint32 sym = 4;
-    uint64 user_id = 5;
-    uint64 op_id = 6;
+    uint64 tot_pos = 4;
+    uint32 sym = 5;
+    uint64 user_id = 6;
+    uint64 op_id = 7;
 }
 
 message last_executed_operation {
@@ -39,6 +43,15 @@ message last_executed_operation {
 
 // empty message for void and no-argument calls
 message empty {}
+
+message user_message {
+    int32 user_id = 1;
+}
+
+message pos_message {
+    uint64 pos = 1;
+    uint64 line = 2;
+}
 
 // vector of strings which represent the file
 message file_from_server {
