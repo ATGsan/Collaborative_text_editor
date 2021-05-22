@@ -163,6 +163,7 @@ private:
 public:
     ServerService(std::string &file) : file_name(std::move(file)) {
         std::ifstream f(file_name);
+        content = {};
         std::string s;
         while (std::getline(f, s)) {
             content.push_back(s);
