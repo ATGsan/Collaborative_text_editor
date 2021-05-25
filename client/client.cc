@@ -146,6 +146,11 @@ client::client(std::string server_address, std::string file)
     this->service = ClientService(
             grpc::CreateChannel(server_address,
                                 grpc::InsecureChannelCredentials()), file);
+    service.OPs(OP_type::ADD_LINE, 0, 0, '\n', CLIENT_ID);
+    POS = 0;
+    auto cursor = this->textEdit->textCursor();
+    cursor.setPosition(0);
+    this->textEdit->setTextCursor(cursor);
 
     this->last_executed_operations = EOpVector();
 
@@ -262,7 +267,7 @@ QString vecToText(const QVector<QString>& vec) {
 int vecToTextPos(const std::vector<std::string>& vec) {
     int pos = 0;
     for (int i = 0; i < LINE; ++i) {
-        pos += vec[i].size();
+        pos += vec[i].size()+1;
     }
     pos += POS;
     return pos;
@@ -276,9 +281,15 @@ bool client::eventFilter(QObject *obj, QEvent *event) {
             std::cout << "user " << CLIENT_ID << " at position " << POS << " at line " << LINE << std::endl;
             if (keyEvent->key() == Qt::Key_Enter || keyEvent->key() == Qt::Key_Return) {
                  std::cout << "newline" << std::endl;
+
+                 auto cursor = this->textEdit->textCursor();
+
                  last_executed_operations.add(service.OPs(OP_type::ADD_LINE, POS, LINE, '\n', CLIENT_ID));
                  LINE++;
                  POS = 0;
+                 cursor.setPosition(vecToTextPos(service.text_vec));
+                 this->textEdit->setTextCursor(cursor);
+
                  res = QString::fromUtf8(service.initialize().c_str());
             } else if (keyEvent->key() == Qt::Key_Backspace) {
                 if (LINE == 0) {
@@ -300,6 +311,8 @@ bool client::eventFilter(QObject *obj, QEvent *event) {
                 res = QString::fromUtf8(service.initialize().c_str());
             } else if (keyEvent->key() == Qt::Key_Delete) {
                 if (LINE == service.text_vec.size()) {
+
+                } else if (LINE == service.text_vec.size()-1) {
                     if (POS < service.text_vec.back().size()) {
                         last_executed_operations.add(service.OPs(OP_type::DELETE, POS+1, LINE, this->textEdit->toPlainText().toStdString()[POS+1], CLIENT_ID));
                     }
@@ -334,10 +347,15 @@ bool client::eventFilter(QObject *obj, QEvent *event) {
 
                 return true;
             } else if (keyEvent->key() == Qt::Key_Right) {
-                if (LINE == service.text_vec.size()) {
-                    if (POS < service.text_vec.back().size()) {
+                if (this->textEdit->toPlainText().isEmpty()) {
+                    return true;
+                }
+
+                if (LINE == service.text_vec.size()-1) {
+                    if (POS < service.text_vec[LINE].size()) {
                         POS++;
                     }
+
                 } else {
                     if (POS == service.text_vec[LINE].size()) {
                         LINE++;
@@ -398,6 +416,9 @@ bool client::eventFilter(QObject *obj, QEvent *event) {
             markCursors();
             this->textEdit->clear();
             this->textEdit->textCursor().insertText(res);
+            auto cursor = this->textEdit->textCursor();
+            cursor.setPosition(vecToTextPos(service.text_vec));
+            this->textEdit->setTextCursor(cursor);
             std::cout << res.toStdString() << std::endl;
             std::cout << "cursor pos = " << this->textEdit->textCursor().position() << std::endl;
 
