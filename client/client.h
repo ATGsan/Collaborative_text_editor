@@ -121,18 +121,9 @@ private:
     bool saveFile(const QString &fileName);
     void setCurrentFile(const QString &fileName);
     QString strippedName(const QString &fullFileName);
-    QString askFilename();
-    void receiveCursorsPositions(void);
-    void highlightPosition(size_t pos, QColor color);
-    void unhighlightPosition(size_t pos);
-    void markCursors(void);
-    QColor intToColor(int n);
-    QMap<int, int> cursorsPositions;
     QPlainTextEdit *textEdit;
     QTextCursor cursor;
     QString curFile;
-    QVector<QString> maintext;
-    QVector<QColor> cursorColors = {Qt::yellow, Qt::blue, Qt::red, Qt::green};
 };
 
 #endif // MAINWINDOW_H

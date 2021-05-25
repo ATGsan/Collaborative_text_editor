@@ -147,13 +147,7 @@ int ClientService::get_user_id() {
     return u_id;
 }
 
-
-size_t receiveCursorsQuantity() {
-    return 1;
-    // получать начальное количество курсоров с сервера
-}
-
-static int POS=0, LINE=0, CLIENT_ID, CURSORS_QUANTITY = receiveCursorsQuantity();
+static int POS=0, LINE=0, CLIENT_ID;
 
 client::client(std::string server_address, std::string file)
     : textEdit(new QPlainTextEdit), cursor(textEdit->textCursor())
@@ -191,69 +185,7 @@ client::client(std::string server_address, std::string file)
 
     setCurrentFile(QString());
     setUnifiedTitleAndToolBarOnMac(true);
-//  QMap с позициями других курсоров, свой уже в глобальной константе. Сначала все курсоры находятся в начале файла
-    for (size_t i = 0; i < CURSORS_QUANTITY; ++i) {
-        cursorsPositions[i] = 0;
-    }
     service.get_user_id();
-}
-
-
-
-void client::receiveCursorsPositions() {
-    for (int i = 0; i < CURSORS_QUANTITY; ++i) {
-        cursorsPositions[i] = 0; // менять на значение, полученное с сервера
-    }
-    // получать новые позицие курсоров (может быть в векторе, может быть числами)
-}
-
-void client::highlightPosition(size_t pos, QColor color) {
-    if (POS == 1) return;
-    QTextCharFormat fmt;
-    fmt.setBackground(color);
-
-    QTextCursor cursor(textEdit->textCursor());
-    int curPos = cursor.position();
-
-    cursor.setPosition(pos, QTextCursor::MoveAnchor);
-    cursor.setPosition(pos+1, QTextCursor::KeepAnchor);
-    cursor.setCharFormat(fmt);
-
-    cursor.setPosition(curPos);
-}
-
-void client::unhighlightPosition(size_t pos) {
-    if (POS == 1) return;
-    QTextCharFormat fmt;
-    fmt.setBackground(Qt::white);
-
-    QTextCursor cursor(textEdit->textCursor());
-    int curPos = cursor.position();
-
-    cursor.setPosition(pos, QTextCursor::MoveAnchor);
-    cursor.setPosition(pos+1, QTextCursor::KeepAnchor);
-    cursor.setCharFormat(fmt);
-
-    cursor.setPosition(curPos);
-}
-
-QColor client::intToColor(int n) {
-    return cursorColors[n % 4];
-    // менять цвет в зависимости от номера или сделать вектор цветов для курсоров
-}
-
-void client::markCursors() {
-    for (int i = 0; i < cursorsPositions.size(); ++i) {
-        if (i != CLIENT_ID) {
-            unhighlightPosition(cursorsPositions[i]);
-        }
-    }
-    receiveCursorsPositions();
-    for (int i = 0; i < cursorsPositions.size(); ++i) {
-        if (i != CLIENT_ID) {
-            highlightPosition(cursorsPositions[i], intToColor(i));
-        }
-    }
 }
 
 int vecToTextPos(const std::vector<std::string>& vec) {
@@ -406,7 +338,6 @@ bool client::eventFilter(QObject *obj, QEvent *event) {
             }
             std::cout << LINE << " " << POS << std::endl;
 
-            markCursors();
             this->textEdit->clear();
             this->textEdit->textCursor().insertText(res);
             auto cursor = this->textEdit->textCursor();
@@ -498,7 +429,6 @@ void client::undo() {
         }
         QString res = QString::fromUtf8(service.initialize().c_str());
         this->textEdit->textCursor().setPosition(POS);
-        markCursors();
         this->textEdit->clear();
         this->textEdit->textCursor().insertText(res);
         std::cout << res.toStdString() << std::endl;
@@ -509,14 +439,6 @@ void client::undo() {
 }
 
 void client::redo() {
-//    service.OPs(OP_type::REDO, POS, LINE, '\0', CLIENT_ID);
-//    QString res = QString::fromUtf8(service.initialize().c_str());
-//    POS = service.get_pos();
-//    this->textEdit->clear();
-//    this->textEdit->textCursor().insertText(res);
-//    this->textEdit->textCursor().setPosition(POS);
-//    std::cout << "Redo operation" << std::endl;
-
     try {
         std::cout << "redo signal received" << std::endl;
         auto a = last_executed_operations.get_for_redo();
@@ -556,7 +478,6 @@ void client::redo() {
         }
         QString res = QString::fromUtf8(service.initialize().c_str());
         this->textEdit->textCursor().setPosition(POS);
-        markCursors();
         this->textEdit->clear();
         this->textEdit->textCursor().insertText(res);
         std::cout << res.toStdString() << std::endl;
@@ -735,7 +656,6 @@ void client::commitData(QSessionManager &manager)
         if (!maybeSave())
             manager.cancel();
     } else {
-        // Non-interactive: save without asking
         if (textEdit->document()->isModified())
             save();
     }
