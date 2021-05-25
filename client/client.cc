@@ -160,6 +160,7 @@ client::client(std::string server_address, std::string file)
     if (!CLIENT_ID) {
         service.OPs(OP_type::ADD_LINE, 0, 0, '\n', CLIENT_ID);
         POS = 0;
+        service.OPs(OP_type::MOVE, 0, 0, '\0', CLIENT_ID);
         auto cursor = this->textEdit->textCursor();
         cursor.setPosition(0);
         this->textEdit->setTextCursor(cursor);
@@ -200,6 +201,9 @@ int vecToTextPos(const std::vector<std::string>& vec) {
 
 bool client::eventFilter(QObject *obj, QEvent *event) {
     pos_line cur = service.get_pos();
+    POS = cur.pos;
+    LINE = cur.line;
+
     if (obj == textEdit) {
         if (event->type() == QEvent::KeyPress) {
             QString res = this->textEdit->toPlainText();
@@ -213,6 +217,7 @@ bool client::eventFilter(QObject *obj, QEvent *event) {
                  last_executed_operations.add(service.OPs(OP_type::ADD_LINE, POS, LINE, '\n', CLIENT_ID));
                  LINE++;
                  POS = 0;
+                 service.OPs(OP_type::MOVE, POS, LINE, '\0', CLIENT_ID);
                  cursor.setPosition(vecToTextPos(service.text_vec));
                  this->textEdit->setTextCursor(cursor);
 
@@ -263,7 +268,7 @@ bool client::eventFilter(QObject *obj, QEvent *event) {
                         POS--;
                     }
                 }
-                std::cout << LINE << " " << POS << std::endl;
+                service.OPs(OP_type::MOVE, POS, LINE, '\0', CLIENT_ID);
 
                 auto cursor = this->textEdit->textCursor();
                 cursor.setPosition(vecToTextPos(service.text_vec));
@@ -290,7 +295,7 @@ bool client::eventFilter(QObject *obj, QEvent *event) {
                         POS++;
                     }
                 }
-                std::cout << LINE << " " << POS << std::endl;
+                service.OPs(OP_type::MOVE, POS, LINE, '\0', CLIENT_ID);
 
                 auto cursor = this->textEdit->textCursor();
                 cursor.setPosition(vecToTextPos(service.text_vec));
@@ -306,7 +311,7 @@ bool client::eventFilter(QObject *obj, QEvent *event) {
                         POS = service.text_vec[LINE].size();
                     }
                 }
-                std::cout << LINE << " " << POS << std::endl;
+                service.OPs(OP_type::MOVE, POS, LINE, '\0', CLIENT_ID);
 
                 auto cursor = this->textEdit->textCursor();
                 cursor.setPosition(vecToTextPos(service.text_vec));
@@ -322,7 +327,7 @@ bool client::eventFilter(QObject *obj, QEvent *event) {
                         POS = service.text_vec[LINE].size();
                     }
                 }
-                std::cout << LINE << " " << POS << std::endl;
+                service.OPs(OP_type::MOVE, POS, LINE, '\0', CLIENT_ID);
 
                 auto cursor = this->textEdit->textCursor();
                 cursor.setPosition(vecToTextPos(service.text_vec));
@@ -337,7 +342,7 @@ bool client::eventFilter(QObject *obj, QEvent *event) {
                 POS++;
                 std::cout << "printed " << keyEvent->text().toStdString() << std::endl;
             }
-            std::cout << LINE << " " << POS << std::endl;
+            service.OPs(OP_type::MOVE, POS, LINE, '\0', CLIENT_ID);
 
             this->textEdit->clear();
             this->textEdit->textCursor().insertText(res);
