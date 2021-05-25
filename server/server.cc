@@ -218,7 +218,7 @@ public:
 
     Status sendOP(ServerContext* context, const editor_request* OP, last_executed_operation* ret) override {
         editor_request op = *OP;
-        op_vector.OPT(op);
+//        op_vector.OPT(op);
         OP_type op_type = op.op();
         uint64_t pos = op.pos();
         uint64_t line = op.line();
@@ -284,6 +284,9 @@ public:
                 op_vector.add(op);
                 del_line(content,line);
                 break;
+            }
+            case operationTransportation::MOVE: {
+                return Status::OK;
             }
             default:
                 return Status::CANCELLED;

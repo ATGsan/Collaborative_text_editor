@@ -19,11 +19,10 @@ service clientService {
 enum OP_type {
     INSERT = 0;
     DELETE = 1;
-    UNDO = 2;
-    REDO = 3;
-    ADD_LINE = 4;
-    DEL_LINE = 5;
-    INVALID = 6;
+    ADD_LINE = 2;
+    DEL_LINE = 3;
+    MOVE = 4;
+    INVALID = 5;
 }
 
 // message with information for operation
