@@ -148,17 +148,12 @@ int ClientService::get_user_id() {
 }
 
 
-size_t receiveId() {
-    return 0;
-    // получать свой (нового пользователя) id с сервера
-}
-
 size_t receiveCursorsQuantity() {
     return 1;
     // получать начальное количество курсоров с сервера
 }
 
-static int POS=0, LINE=0, CLIENT_ID=receiveId(), CURSORS_QUANTITY = receiveCursorsQuantity();
+static int POS=0, LINE=0, CLIENT_ID, CURSORS_QUANTITY = receiveCursorsQuantity();
 
 client::client(std::string server_address, std::string file)
     : textEdit(new QPlainTextEdit), cursor(textEdit->textCursor())
@@ -167,6 +162,7 @@ client::client(std::string server_address, std::string file)
     this->service = ClientService(
             grpc::CreateChannel(server_address,
                                 grpc::InsecureChannelCredentials()), file);
+    CLIENT_ID = service.get_user_id();
     service.OPs(OP_type::ADD_LINE, 0, 0, '\n', CLIENT_ID);
     POS = 0;
     auto cursor = this->textEdit->textCursor();
@@ -260,32 +256,6 @@ void client::markCursors() {
     }
 }
 
-QVector<QString> textToVector(const QString& text) {
-    QVector<QString> vec;
-    QString newLine;
-    QTextStream ss(&newLine);
-    int i = 0;
-    while (i < text.size()) {
-        if (text.at(i) == '\n') {
-            vec.append(newLine);
-            newLine = "";
-        } else {
-            ss << text.at(i);
-        }
-        i++;
-    }
-    return vec;
-}
-
-QString vecToText(const QVector<QString>& vec) {
-    QString text;
-    QTextStream ts(&text);
-    for (auto s : vec) {
-        ts << s << "\n";
-    }
-    return text;
-}
-
 int vecToTextPos(const std::vector<std::string>& vec) {
     int pos = 0;
     for (int i = 0; i < LINE; ++i) {
@@ -296,7 +266,7 @@ int vecToTextPos(const std::vector<std::string>& vec) {
 }
 
 bool client::eventFilter(QObject *obj, QEvent *event) {
-    pos_line cur = this->get_pos();
+    pos_line cur = service.get_pos();
     if (obj == textEdit) {
         if (event->type() == QEvent::KeyPress) {
             QString res = this->textEdit->toPlainText();
