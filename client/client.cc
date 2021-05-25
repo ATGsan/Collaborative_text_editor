@@ -157,12 +157,13 @@ client::client(std::string server_address, std::string file)
             grpc::CreateChannel(server_address,
                                 grpc::InsecureChannelCredentials()), file);
     CLIENT_ID = service.get_user_id();
-    service.OPs(OP_type::ADD_LINE, 0, 0, '\n', CLIENT_ID);
-    POS = 0;
-    auto cursor = this->textEdit->textCursor();
-    cursor.setPosition(0);
-    this->textEdit->setTextCursor(cursor);
-
+    if (!CLIENT_ID) {
+        service.OPs(OP_type::ADD_LINE, 0, 0, '\n', CLIENT_ID);
+        POS = 0;
+        auto cursor = this->textEdit->textCursor();
+        cursor.setPosition(0);
+        this->textEdit->setTextCursor(cursor);
+    }
     this->last_executed_operations = EOpVector();
 
     setCentralWidget(textEdit);
