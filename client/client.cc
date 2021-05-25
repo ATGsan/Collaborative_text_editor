@@ -126,6 +126,27 @@ void ClientService::writeToFile() {
     last_op = op.op_id();
 }
 
+pos_line ClientService::get_pos() {
+    ClientContext context;
+    user_message user;
+    user.set_user_id(u_id);
+    pos_message pos;
+    stub_->get_pos(&context, user, &pos);
+    pos_line ret;
+    ret.line = pos.line();
+    ret.pos = pos.pos();
+    return ret;
+}
+
+int ClientService::get_user_id() {
+    ClientContext context;
+    empty e;
+    user_message um;
+    stub_->get_u_id(&context, e, &um);
+    u_id = um.user_id();
+    return u_id;
+}
+
 
 size_t receiveId() {
     return 0;
@@ -178,6 +199,7 @@ client::client(std::string server_address, std::string file)
     for (size_t i = 0; i < CURSORS_QUANTITY; ++i) {
         cursorsPositions[i] = 0;
     }
+    service.get_user_id();
 }
 
 
@@ -274,6 +296,7 @@ int vecToTextPos(const std::vector<std::string>& vec) {
 }
 
 bool client::eventFilter(QObject *obj, QEvent *event) {
+    pos_line cur = this->get_pos();
     if (obj == textEdit) {
         if (event->type() == QEvent::KeyPress) {
             QString res = this->textEdit->toPlainText();

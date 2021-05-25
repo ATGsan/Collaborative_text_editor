@@ -23,6 +23,8 @@ using operationTransportation::empty;
 using operationTransportation::file_from_server;
 using operationTransportation::OP_type;
 using operationTransportation::last_executed_operation;
+using operationTransportation::user_message;
+using operationTransportation::pos_message;
 
 struct request {
     OP_type op;
@@ -52,11 +54,17 @@ public:
     request get_for_redo();
 };
 
+struct pos_line {
+    uint64_t pos;
+    uint64_t line;
+};
+
 class ClientService {
 private:
     std::unique_ptr<clientService::Stub> stub_;
     std::string file_name;
     uint64_t last_op;
+    uint32_t u_id;
 public:
     // default constructor with initialize of channel between server and client
     ClientService();
@@ -72,7 +80,12 @@ public:
 
     // call to write file from vector of strings to file in server file
     void writeToFile();
+
+    pos_line get_pos();
+    int get_user_id();
 };
+
+
 
 class client : public QMainWindow
 {
