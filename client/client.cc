@@ -200,9 +200,9 @@ int vecToTextPos(const std::vector<std::string>& vec) {
 }
 
 bool client::eventFilter(QObject *obj, QEvent *event) {
-    pos_line cur = service.get_pos();
-    POS = cur.pos;
-    LINE = cur.line;
+    // pos_line cur = service.get_pos();
+    // POS = cur.pos;
+    // LINE = cur.line;
 
     if (obj == textEdit) {
         if (event->type() == QEvent::KeyPress) {
