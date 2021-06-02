@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package operationTransportation;
+
+service clientService {
+    // send file from server to client
+    rpc initialize(empty) returns (file_from_server);
+    // send operation from client to server
+    rpc sendOP(editor_request) returns (last_executed_operation);
+    // send command to write from vector to file
+    rpc writeToFile(empty) returns (last_executed_operation);
+
+    rpc get_u_id(empty) returns (user_message);
+
+    rpc get_pos(user_message) returns (pos_message);
+}
+
+// used operations
+enum OP_type {
+    INSERT = 0;
+    DELETE = 1;
+    ADD_LINE = 2;
+    DEL_LINE = 3;
+    MOVE = 4;
+    INVALID = 5;
+}
+
+// message with information for operation
+message editor_request {
+    OP_type op = 1;
+    uint64 pos = 2;
+    uint64 line = 3;
+    uint64 tot_pos = 4;
+    uint32 sym = 5;
+    uint64 user_id = 6;
+    uint64 op_id = 7;
+}
+
+message last_executed_operation {
+    uint64 op_id = 1;
+}
+
+// empty message for void and no-argument calls
+message empty {}
+
+message user_message {
+    int32 user_id = 1;
+}
+
+message pos_message {
+    uint64 pos = 1;
+    uint64 line = 2;
+}
+
+// vector of strings which represent the file
+message file_from_server {
+    repeated string file = 1;
+    uint64 op_id = 2;
+}

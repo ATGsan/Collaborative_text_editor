@@ -1,55 +1,38 @@
 # Collaborative text editor
 
-# План
+## RoadMap
 
-1. Реализовать простое соединение клиент сервер;
-2. Алгоритм;
-3. Сделать интерфейс;
+1. Intro to cMake;
+2. Intro to gRPC;
+3. First echo server;
+4. Server side operations(Alex);
+5. UI(Artem);
+6. One cmake for two sides;
+7. Connect operations(insert, delete);
+8. Crying;
+9. Connect operations(undo, redo);
+10. More crying;
+11. Connect operations(add_line, del_line);
+12. Fix bugs and crying;
+13. WOW;
+14. ---NOW---.
 
-## Клиент-сервер
+## How to run
 
-### Технологии
-
-1. C++
-2. gRPC
-3. Cmake
-
-### Материалы
-
-TBD
-
-### Что нужно продумать
-
-1. Где и как хранить файлы?
-
-### Текущее состояние
-
- Делаю UI
-
-## Алгоритм 
-
-### Технологии
-
-1. C++
-2. gRPC
-
-### Материалы
-
-1. [Статья про treeOPT](./notes/IgnatCEW02.pdf);
-2. [Статья "Concurrency Control in Groupware Systems"](https://www.lri.fr/~mbl/ENS/CSCW/2012/papers/Ellis-SIGMOD89.pdf)
-
-### Что нужно продумать 
-
-### Текущее состояние
-
-# Как собрать проект
-
-1. На вашем компьютере должен быть установлен gRPC и Protobuf;
-2. Далее надо выполнить следующие команды:
 ```console
+git clone https://github.com/ATGsan/Collaborative_text_editor/
+cd Collaborative_text_editor
 mkdir -p cmake/build
 cd cmake/build
 cmake ../../service
 make(-j)
+./server
+./client
 ```
-3. Появятся файлы client и server которые можно запустить.
+enjoy
+
+## Credits
+
+Frontend end bug fix : Artem Prisyazhnyuk(@artempris);\
+Backend and build : Alexandr Shitov(@Atgsan);\
+Mentor and reviewer : Danila Kutenin(@Danlark).
