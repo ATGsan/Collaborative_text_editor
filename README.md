@@ -20,7 +20,7 @@
 ## How to run
 
 ```console
-git clone ...
+git clone https://github.com/ATGsan/Collaborative_text_editor/
 cd Collaborative_text_editor
 mkdir -p cmake/build
 cd cmake/build
