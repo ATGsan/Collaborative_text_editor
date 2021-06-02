@@ -354,7 +354,6 @@ bool client::eventFilter(QObject *obj, QEvent *event) {
 
             return true;
         }
-        i++;
     }
     return QMainWindow::eventFilter(obj, event);
 }
